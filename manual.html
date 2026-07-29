@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="内容依据美菜官方《旭峰开票系统卖家操作手册》v1.1 整理，如有更新以美菜最新文档为准">
+  <title>开票操作手册｜开票省点事</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="guide-page manual-page">
+  <a class="skip-link" href="#manual-main">跳到手册正文</a>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="index.html" aria-label="返回开票省点事首页">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" role="img">
+            <path d="M9 6.5h11.5L25 11v14.5H9z"></path>
+            <path d="M20.5 6.5V11H25M13 16h8M13 20h6"></path>
+          </svg>
+        </span>
+        <span>
+          <strong>开票省点事</strong>
+          <small>美菜第三方经销商服务</small>
+        </span>
+      </a>
+      <nav class="header-nav" aria-label="主要导航">
+        <a class="header-link" href="index.html">首页</a>
+        <a class="header-link" href="guide.html">操作指南</a>
+        <a class="header-link" href="invoice-explainer.html">认证讲解</a>
+        <a class="header-link" href="manual.html">开票手册</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="manual-main">
+    <section class="guide-hero manual-hero">
+      <div class="shell">
+        <p class="eyebrow"><span aria-hidden="true">●</span> 美菜官方手册 v1.1 整理</p>
+        <h1>开票操作手册</h1>
+        <p class="manual-source">内容依据美菜官方《旭峰开票系统卖家操作手册》v1.1 整理，如有更新以美菜最新文档为准</p>
+
+        <nav class="manual-toc" aria-label="页内目录">
+          <strong>目录</strong>
+          <div>
+            <a href="#first-use">首次使用：三步缺一不可</a>
+            <a href="#invoice">开具发票</a>
+            <a href="#errors">开票失败怎么办（错误速查）</a>
+            <a href="#red-invoice">发票红冲（作废重开）</a>
+            <a href="#download">发票文件下载</a>
+            <a href="#checklist">每次开票前检查清单</a>
+            <a href="#faq">常见问题精选</a>
+            <a href="#contact">遇到问题找谁</a>
+          </div>
+        </nav>
+      </div>
+    </section>
+
+    <div class="shell manual-shell">
+      <section class="manual-chapter" id="first-use">
+        <h2>首次使用：三步缺一不可</h2>
+        <p>菜单都在美菜卖家后台「发票管理」下，依次完成：</p>
+        <ol class="manual-steps">
+          <li><strong>旭峰注册</strong>：输入企业税号（须与营业执照统一社会信用代码完全一致，含大小写、空格）→ 打开旭峰注册页 → 按指引完成注册和付款。一个税号只需注册一次。</li>
+          <li><strong>数电账号登记</strong>：填写企业在电子税务局开立的数电账号。注意：数电账号不是税号——税号是统一社会信用代码（全国唯一），数电账号是电子税务局里办数电发票业务的登录账号；一个税号下可有多个数电账号，登记一个常用的即可。</li>
+          <li><strong>旭峰登录认证</strong>：填企业税号+数电账号 → 获取短信验证码（若提示"无需验证码"可跳过）→ 短信登录 → 查询认证状态确认结果。</li>
+        </ol>
+
+        <h3>认证状态速查表：</h3>
+        <div class="manual-table-wrap">
+          <table class="manual-table">
+            <thead>
+              <tr>
+                <th scope="col">状态</th>
+                <th scope="col">含义</th>
+                <th scope="col">处理</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>无需认证</td>
+                <td>当前账号无需登录认证</td>
+                <td>可直接开票</td>
+              </tr>
+              <tr>
+                <td>已登录</td>
+                <td>已通过登录认证</td>
+                <td>可直接开票</td>
+              </tr>
+              <tr>
+                <td>需短信认证</td>
+                <td>登录态已过期</td>
+                <td>重新走短信登录流程</td>
+              </tr>
+              <tr>
+                <td>需扫码认证</td>
+                <td>需扫码完成认证</td>
+                <td>按页面提示扫码</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="manual-note">提示：登录认证有有效期，过期需重新认证；每次开票/红冲前系统会自动校验，未认证会拒绝开票。建议开票前先确认状态为"已登录"或"无需认证"。</p>
+
+        <div class="manual-subsection">
+          <h3>首次必做：修改旭峰初始密码</h3>
+          <p>访问 https://fpkj.vpiaotong.com/login，用注册时的账号密码登录后修改（新密码 8-20 位，含大小写字母+数字）。不改初始密码开票可能失败。改密码只影响旭峰平台登录，美菜系统的"旭峰登录认证"无需重做。忘记密码找美菜业务人员重置。</p>
+        </div>
+      </section>
+
+      <section class="manual-chapter" id="invoice">
+        <h2>开具发票</h2>
+        <ul class="manual-list">
+          <li><strong>自销开票</strong>（给自己下的订单开票）：发票申请 → 选申请单 → 旭峰开票 → 填数电账号（必填）→ 确认发票类型/金额/明细 → 确认开票 → 异步出票，通常 1~5 分钟</li>
+          <li><strong>代销开票</strong>（美菜代销订单回票）：代销回票管理 → 选回票申请单 → 旭峰开票 → 填数电账号 → 提交。销方为卖家企业、购方为美菜；申请单金额必须大于 0</li>
+          <li>开票状态：开票中（处理中）/ 已开票（可下载 PDF）/ 开票失败（按原因处理）</li>
+          <li>发票商品名前的 <em>蔬菜</em> <em>谷物</em> 等前缀是税收分类编码税目大类，系统自动匹配，数电发票规范要求；与实际品类不符时联系美菜运营核对商品税编</li>
+        </ul>
+      </section>
+
+      <section class="manual-chapter" id="errors">
+        <h2>开票失败怎么办（错误速查）</h2>
+        <div class="manual-table-wrap">
+          <table class="manual-table">
+            <thead>
+              <tr>
+                <th scope="col">提示</th>
+                <th scope="col">原因</th>
+                <th scope="col">处理</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>旭峰数电账号不能为空</td>
+                <td>未填数电账号</td>
+                <td>在开票弹窗填写</td>
+              </tr>
+              <tr>
+                <td>请到【旭峰数电账号登录认证】进行登录认证</td>
+                <td>认证过期或未认证</td>
+                <td>到"旭峰登录认证"重新认证</td>
+              </tr>
+              <tr>
+                <td>开票终端已到期（8047）</td>
+                <td>旭峰服务终端授权到期</td>
+                <td>联系美菜业务，由美菜联系旭峰续费</td>
+              </tr>
+              <tr>
+                <td>账号绑定失效（3001）</td>
+                <td>旭峰平台账号绑定失效</td>
+                <td>联系美菜业务恢复绑定</td>
+              </tr>
+              <tr>
+                <td>税额精度超限（8011）</td>
+                <td>金额×税率误差超 0.06 元</td>
+                <td>核对流水金额，避免极小金额开票</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="manual-chapter" id="red-invoice">
+        <h2>发票红冲（作废重开）</h2>
+        <p>发票列表 → 选原发票（状态须为"已开票"）→ 红冲 → 填数电账号（须与原蓝票一致）→ 选红冲原因（默认全额红冲）→ 提交，状态"红冲中"→"已红冲"。</p>
+        <p class="manual-note">注意：红冲不可逆；红冲成功原发票作废并生成等额红字发票；只有旭峰开的发票走旭峰红冲（百望开的走百望入口）；红冲前确认登录认证有效。</p>
+      </section>
+
+      <section class="manual-chapter" id="download">
+        <h2>发票文件下载</h2>
+        <p>开票成功后系统自动从旭峰拉取 PDF/XML，通常 5~10 分钟内发票列表出现"下载 PDF"按钮。超过 30 分钟未生成，联系美菜业务排查。红字发票同样支持下载。</p>
+      </section>
+
+      <section class="manual-chapter" id="checklist">
+        <h2>每次开票前检查清单</h2>
+        <div class="manual-table-wrap">
+          <table class="manual-table manual-single-column">
+            <tbody>
+              <tr><td>企业税号已完成"旭峰注册"</td></tr>
+              <tr><td>数电账号已完成"数电账号登记"</td></tr>
+              <tr><td>"旭峰登录认证"状态为"已登录"或"无需认证"</td></tr>
+              <tr><td>开票申请单金额大于 0</td></tr>
+              <tr><td>开票弹窗"数电账号"已填写</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="manual-chapter" id="faq">
+        <h2>常见问题精选</h2>
+        <div class="manual-table-wrap">
+          <table class="manual-table manual-faq-table">
+            <tbody>
+              <tr>
+                <th scope="row">旭峰开票和百望开票什么区别？</th>
+                <td>并行通道二选一，能力一致。旭峰开的是数电发票（国家税务总局推行的全电发票新票种），百望开的是电子发票。</td>
+              </tr>
+              <tr>
+                <th scope="row">一直提示要登录认证？</th>
+                <td>认证过期了，到"旭峰登录认证"重新短信登录，状态变"已登录"再开票。</td>
+              </tr>
+              <tr>
+                <th scope="row">红冲后原发票还能用吗？</th>
+                <td>不能，已作废且不可恢复，以生成的红字发票为准。</td>
+              </tr>
+              <tr>
+                <th scope="row">旭峰开票收费吗？</th>
+                <td>服务费在注册时的收银台完成支付，美菜不额外收开票服务费。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="manual-chapter" id="contact">
+        <h2>遇到问题找谁</h2>
+        <div class="manual-table-wrap">
+          <table class="manual-table">
+            <thead>
+              <tr>
+                <th scope="col">问题类型</th>
+                <th scope="col">找谁</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>资质维护、税号问题</td>
+                <td>美菜业务人员</td>
+              </tr>
+              <tr>
+                <td>开票失败、红冲失败</td>
+                <td>美菜业务人员 → 美菜技术</td>
+              </tr>
+              <tr>
+                <td>旭峰平台侧问题（8047/3001）</td>
+                <td>美菜业务人员 → 旭峰客服</td>
+              </tr>
+              <tr>
+                <td>商品税编问题</td>
+                <td>美菜运营</td>
+              </tr>
+              <tr>
+                <td>注册/开通阶段问题</td>
+                <td>注册页右下角提交工单</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div>
+        <strong>开票省点事</strong>
+        <p>开票操作手册</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

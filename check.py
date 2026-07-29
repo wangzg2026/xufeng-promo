@@ -14,12 +14,19 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).resolve().parent
 HTML_FILES = ("index.html", "guide.html")
 EXPLAINER_FILE = "invoice-explainer.html"
+MANUAL_FILE = "manual.html"
+NAV_PAGE_FILES = (*HTML_FILES, EXPLAINER_FILE, MANUAL_FILE)
 EXPLAINER_ASSETS = ("assets/explainer.css", "assets/explainer.js")
 FACTS_FILE = "facts.json"
 EXPLAINER_PAGE_FORBIDDEN_TERMS = ("RPA", "乐企")
+MANUAL_PAGE_FORBIDDEN_TERMS = ("RPA", "乐企", "试用期")
+MANUAL_ERROR_CODES = ("8047", "3001", "8011")
+MANUAL_DURATION_RANGES = ("1~5 分钟", "5~10 分钟")
+MANUAL_SOURCE_ATTRIBUTION = "美菜官方手册 v1.1 整理"
 REQUIRED_FILES = (
     *HTML_FILES,
     EXPLAINER_FILE,
+    MANUAL_FILE,
     "assets/style.css",
     *EXPLAINER_ASSETS,
     FACTS_FILE,
@@ -852,9 +859,9 @@ def check_explainer(
             if isinstance(link["attrs"], dict)
             and link["attrs"].get("href") == EXPLAINER_FILE
         ]
-        if len(explainer_links) != 1:
+        if len(explainer_links) != 2:
             link_problems.append(
-                f"{source_name} must link to {EXPLAINER_FILE} exactly once "
+                f"{source_name} must link to {EXPLAINER_FILE} exactly twice "
                 f"(found {len(explainer_links)})"
             )
 
@@ -891,7 +898,7 @@ def check_explainer(
     checks.record(
         "Explainer — links and files",
         link_problems,
-        "three explainer deliverables exist; index and guide link exactly once; local assets and service entity are verified",
+        "three explainer deliverables exist; index and guide each provide header and content links; local assets and service entity are verified",
     )
 
     motion_problems: list[str] = []
@@ -980,6 +987,75 @@ def check_explainer(
     )
 
 
+def check_manual(checks: Checks) -> None:
+    problems: list[str] = []
+    page_sources: dict[str, str] = {}
+
+    for name in NAV_PAGE_FILES:
+        path = ROOT / name
+        try:
+            page_sources[name] = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            problems.append(f"cannot read {name} ({exc})")
+
+    for name in NAV_PAGE_FILES:
+        source = page_sources.get(name)
+        if source is None:
+            continue
+        header_match = re.search(
+            r"<header\b[^>]*>[\s\S]*?</header>",
+            source,
+            re.IGNORECASE,
+        )
+        if header_match is None:
+            problems.append(f"{name} lacks a header navigation block")
+            continue
+        header_hrefs = set(
+            re.findall(
+                r"\bhref\s*=\s*[\"']([^\"']+)[\"']",
+                header_match.group(0),
+                re.IGNORECASE,
+            )
+        )
+        for target in NAV_PAGE_FILES:
+            if target not in header_hrefs:
+                problems.append(f"{name} header does not link to {target}")
+
+    manual_source = page_sources.get(MANUAL_FILE)
+    if manual_source is not None:
+        manual_parser = SiteHTMLParser()
+        manual_parser.feed(manual_source)
+        manual_parser.close()
+        manual_text = manual_parser.text
+
+        for term in MANUAL_PAGE_FORBIDDEN_TERMS:
+            occurrence_count = manual_source.count(term)
+            if occurrence_count:
+                problems.append(
+                    f"{MANUAL_FILE} contains forbidden term {term!r} "
+                    f"{occurrence_count} time(s); expected 0"
+                )
+        for code in MANUAL_ERROR_CODES:
+            if code not in manual_text:
+                problems.append(f"{MANUAL_FILE} lacks error code {code}")
+        for duration in MANUAL_DURATION_RANGES:
+            if duration not in manual_text:
+                problems.append(
+                    f"{MANUAL_FILE} lacks duration range {duration!r}"
+                )
+        if MANUAL_SOURCE_ATTRIBUTION not in manual_text:
+            problems.append(
+                f"{MANUAL_FILE} lacks source attribution "
+                f"{MANUAL_SOURCE_ATTRIBUTION!r}"
+            )
+
+    checks.record(
+        "manual",
+        problems,
+        "four-page header navigation is cross-linked; forbidden terms occur 0 times; error codes, duration ranges, and source attribution are present",
+    )
+
+
 def main() -> int:
     checks = Checks()
     pricing, sources, parsers = load_sources(checks)
@@ -997,6 +1073,7 @@ def main() -> int:
             "",
         )
     check_explainer(checks, sources, parsers)
+    check_manual(checks)
     if (ROOT / "README.md").is_file():
         check_readme(checks)
     return checks.emit()
