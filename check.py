@@ -411,9 +411,9 @@ def check_ctas_and_assets(
                 app_cta_count += 1
                 if not href.startswith("#"):
                     problems.append(f"{name} CTA must use an in-page target: {href}")
-                if "美菜 App" not in text:
+                if "美菜卖家后台" not in text:
                     problems.append(
-                        f"{name} CTA copy must direct users to 美菜 App ({text!r})"
+                        f"{name} CTA copy must direct users to 美菜卖家后台 ({text!r})"
                     )
         if app_cta_count == 0:
             problems.append(f"{name} has no checked Meicai App CTA")
@@ -429,7 +429,7 @@ def check_ctas_and_assets(
     checks.record(
         "CTA and local assets",
         problems,
-        "CTAs point only to in-page anchors and direct users back to 美菜 App; no external assets",
+        "CTAs point only to in-page anchors and direct users back to 美菜卖家后台; no external assets",
     )
 
 
