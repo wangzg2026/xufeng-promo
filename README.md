@@ -19,3 +19,16 @@ python3 -m http.server 8900
 3. 选择静态站点部署；无需安装命令、构建命令或环境变量，发布目录填写仓库根目录。
 4. 部署完成后使用 Zeabur 分配的子域名访问，逐页检查首页、操作指南、站内跳转和手机端排版。
 5. 审核人补充或替换截图时，将六张图片按页面已声明的文件名放入 `assets/screenshots/`，再重新部署。
+
+## PDF 版手册再生成
+
+`manual.html` 内容变更后必须重新生成 `assets/manual.pdf`（check.py 会校验其存在）：
+
+```bash
+# 起本地服务器后执行（把 8905 换成实际端口）
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
+  --disable-gpu --no-pdf-header-footer \
+  --print-to-pdf=assets/manual.pdf "http://127.0.0.1:8905/manual.html"
+```
+
+已知限制：PDF 文本层部分汉字会被 Chrome 映射为形近的部首字符，仅影响复制粘贴，不影响阅读与打印；错误码、网址等 ASCII 内容不受影响。

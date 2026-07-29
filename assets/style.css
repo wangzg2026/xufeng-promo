@@ -1848,3 +1848,60 @@ summary:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Manual actions row */
+.manual-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-top: 18px;
+}
+
+.manual-actions .microcopy {
+  margin: 0;
+}
+
+/* Print / save-as-PDF (manual page) */
+@media print {
+  .manual-page .skip-link,
+  .manual-page .site-header,
+  .manual-page .manual-actions,
+  .manual-page .manual-footer-nav,
+  .manual-page .site-footer .footer-links {
+    display: none !important;
+  }
+
+  .manual-page {
+    background: #fff;
+  }
+
+  .manual-page .manual-hero,
+  .manual-page .manual-chapter {
+    padding-top: 0;
+    padding-bottom: 18px;
+    box-shadow: none;
+  }
+
+  .manual-page .manual-chapter,
+  .manual-page .manual-toc {
+    border: none;
+    box-shadow: none;
+    background: #fff;
+  }
+
+  .manual-page table,
+  .manual-page tr,
+  .manual-page .manual-chapter h2 {
+    break-inside: avoid;
+  }
+
+  .manual-page .manual-toc a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .manual-page a[href^="http"]::after {
+    content: "";
+  }
+}

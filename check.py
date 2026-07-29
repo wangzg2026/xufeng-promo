@@ -1048,11 +1048,23 @@ def check_manual(checks: Checks) -> None:
                 f"{MANUAL_FILE} lacks source attribution "
                 f"{MANUAL_SOURCE_ATTRIBUTION!r}"
             )
+        if 'href="assets/manual.pdf"' not in manual_source:
+            problems.append(f"{MANUAL_FILE} lacks the assets/manual.pdf download link")
+
+    pdf_path = ROOT / "assets" / "manual.pdf"
+    if not pdf_path.is_file():
+        problems.append("assets/manual.pdf is missing; regenerate it after manual content changes (see README)")
+    elif pdf_path.stat().st_size < 20_000:
+        problems.append(f"assets/manual.pdf looks truncated ({pdf_path.stat().st_size} bytes)")
+
+    style_source = (ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+    if "@media print" not in style_source:
+        problems.append("assets/style.css lacks the @media print block for PDF/print export")
 
     checks.record(
         "manual",
         problems,
-        "four-page header navigation is cross-linked; forbidden terms occur 0 times; error codes, duration ranges, and source attribution are present",
+        "four-page header navigation is cross-linked; forbidden terms occur 0 times; error codes, duration ranges, source attribution, PDF download link/file, and print styles are present",
     )
 
 
