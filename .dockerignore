@@ -1,0 +1,11 @@
+.git
+.gitignore
+.dockerignore
+Dockerfile
+BRIEF.md
+BRIEF-EXPLAINER.md
+check.py
+README.md
+__pycache__
+.omc
+.playwright-mcp

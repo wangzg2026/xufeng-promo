@@ -13,7 +13,19 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent
 HTML_FILES = ("index.html", "guide.html")
-REQUIRED_FILES = (*HTML_FILES, "assets/style.css", "check.py", "README.md")
+EXPLAINER_FILE = "invoice-explainer.html"
+EXPLAINER_ASSETS = ("assets/explainer.css", "assets/explainer.js")
+FACTS_FILE = "facts.json"
+EXPLAINER_PAGE_FORBIDDEN_TERMS = ("RPA", "乐企")
+REQUIRED_FILES = (
+    *HTML_FILES,
+    EXPLAINER_FILE,
+    "assets/style.css",
+    *EXPLAINER_ASSETS,
+    FACTS_FILE,
+    "check.py",
+    "README.md",
+)
 PLACEHOLDER_IMAGES = {
     f"assets/screenshots/step-{number:02d}.png" for number in range(1, 7)
 }
@@ -502,6 +514,472 @@ def check_readme(checks: Checks) -> None:
     )
 
 
+def load_explainer_facts(checks: Checks) -> dict[str, object]:
+    facts_path = ROOT / FACTS_FILE
+    try:
+        facts = json.loads(facts_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        checks.record(
+            "Explainer — fact source",
+            [f"cannot read {FACTS_FILE} ({exc})"],
+            "",
+        )
+        return {}
+
+    problems: list[str] = []
+    object_fields = {
+        "risk_auth": {
+            "name": str,
+            "cycle": str,
+            "cycle_days": int,
+            "where": str,
+            "method": str,
+            "note": str,
+        },
+        "sms_auth": {
+            "name": str,
+            "cycle": str,
+            "cycle_hours": int,
+            "method": str,
+            "note": str,
+        },
+        "channel_mode": {
+            "name": str,
+            "desc": str,
+            "why_auth": str,
+        },
+        "channels_reserved": {
+            "primary_future": str,
+            "fallback": str,
+            "merchant_view": str,
+        },
+    }
+    for object_name, required_fields in object_fields.items():
+        value = facts.get(object_name)
+        if not isinstance(value, dict):
+            problems.append(f"{object_name} must be an object")
+            continue
+        for field_name, expected_type in required_fields.items():
+            field_value = value.get(field_name)
+            if not isinstance(field_value, expected_type) or (
+                expected_type is str and not field_value.strip()
+            ):
+                problems.append(
+                    f"{object_name}.{field_name} must be a non-empty "
+                    f"{expected_type.__name__}"
+                )
+
+    for key in (
+        "auth_failure_recovery",
+        "channels_reserved_note",
+        "compliance_note",
+    ):
+        value = facts.get(key)
+        if not isinstance(value, str) or not value.strip():
+            problems.append(f"{key} must be a non-empty string")
+
+    page_terminology = facts.get("page_terminology")
+    if not isinstance(page_terminology, dict):
+        problems.append("page_terminology must be an object")
+    else:
+        must_use = page_terminology.get("must_use")
+        forbidden_on_page = page_terminology.get("forbidden_on_page")
+        if not isinstance(must_use, str) or not must_use.strip():
+            problems.append("page_terminology.must_use must be a non-empty string")
+        if (
+            not isinstance(forbidden_on_page, list)
+            or not forbidden_on_page
+            or not all(
+                isinstance(item, str) and item.strip()
+                for item in forbidden_on_page
+            )
+        ):
+            problems.append(
+                "page_terminology.forbidden_on_page must contain non-empty strings"
+            )
+        elif not set(EXPLAINER_PAGE_FORBIDDEN_TERMS).issubset(forbidden_on_page):
+            problems.append(
+                "page_terminology.forbidden_on_page must include the two fixed "
+                "explainer terminology bans"
+            )
+
+    invoice_flow = facts.get("invoice_flow")
+    if (
+        not isinstance(invoice_flow, list)
+        or len(invoice_flow) != 4
+        or not all(isinstance(item, str) and item.strip() for item in invoice_flow)
+    ):
+        problems.append("invoice_flow must contain exactly 4 non-empty strings")
+
+    knowledge = facts.get("shudian_knowledge")
+    if not isinstance(knowledge, list) or len(knowledge) != 5:
+        problems.append("shudian_knowledge must contain exactly 5 items")
+    else:
+        for index, item in enumerate(knowledge):
+            if not isinstance(item, dict):
+                problems.append(f"shudian_knowledge[{index}] must be an object")
+                continue
+            for key in ("q", "a"):
+                value = item.get(key)
+                if not isinstance(value, str) or not value.strip():
+                    problems.append(
+                        f"shudian_knowledge[{index}].{key} must be a non-empty string"
+                    )
+
+    risk_auth = facts.get("risk_auth")
+    if isinstance(risk_auth, dict):
+        cycle = risk_auth.get("cycle")
+        cycle_days = risk_auth.get("cycle_days")
+        if (
+            isinstance(cycle, str)
+            and isinstance(cycle_days, int)
+            and f"{cycle_days} 天" not in cycle
+        ):
+            problems.append("risk_auth.cycle disagrees with risk_auth.cycle_days")
+
+    sms_auth = facts.get("sms_auth")
+    if isinstance(sms_auth, dict):
+        cycle = sms_auth.get("cycle")
+        cycle_hours = sms_auth.get("cycle_hours")
+        if (
+            isinstance(cycle, str)
+            and isinstance(cycle_hours, int)
+            and f"{cycle_hours} 小时" not in cycle
+        ):
+            problems.append("sms_auth.cycle disagrees with sms_auth.cycle_hours")
+
+    channel_mode = facts.get("channel_mode")
+    if isinstance(channel_mode, dict) and isinstance(page_terminology, dict):
+        if channel_mode.get("name") != page_terminology.get("must_use"):
+            problems.append(
+                "channel_mode.name disagrees with page_terminology.must_use"
+            )
+
+    checks.record(
+        "Explainer — fact source",
+        problems,
+        "facts.json parses; authentication, account-mode terminology, reserved channels, flow, knowledge, and compliance fields are valid",
+    )
+    return facts if not problems else {}
+
+
+def explainer_fact_strings(facts: dict[str, object]) -> list[str]:
+    strings: list[str] = []
+
+    def collect(value: object) -> None:
+        if isinstance(value, str):
+            strings.append(value)
+        elif isinstance(value, list):
+            for item in value:
+                collect(item)
+        elif isinstance(value, dict):
+            for item in value.values():
+                collect(item)
+
+    for key in (
+        "risk_auth",
+        "sms_auth",
+        "auth_failure_recovery",
+        "channel_mode",
+        "invoice_flow",
+        "shudian_knowledge",
+        "compliance_note",
+    ):
+        collect(facts.get(key))
+    return strings
+
+
+def check_explainer(
+    checks: Checks,
+    sources: dict[str, str],
+    parsers: dict[str, SiteHTMLParser],
+) -> None:
+    facts = load_explainer_facts(checks)
+    explainer_path = ROOT / EXPLAINER_FILE
+    explainer_source = ""
+    explainer_parser = SiteHTMLParser()
+    if explainer_path.is_file():
+        try:
+            explainer_source = explainer_path.read_text(encoding="utf-8")
+            explainer_parser.feed(explainer_source)
+            explainer_parser.close()
+        except (OSError, UnicodeError) as exc:
+            explainer_source = ""
+            explainer_parser = SiteHTMLParser()
+            explainer_read_problem = f"cannot read {EXPLAINER_FILE} ({exc})"
+        else:
+            explainer_read_problem = ""
+    else:
+        explainer_read_problem = f"missing {EXPLAINER_FILE}"
+
+    fact_problems: list[str] = []
+    if not facts:
+        fact_problems.append("facts.json is unavailable or incomplete")
+    if explainer_read_problem:
+        fact_problems.append(explainer_read_problem)
+    if facts and explainer_source:
+        explainer_text = explainer_parser.text
+        for value in explainer_fact_strings(facts):
+            if normalized(value) not in explainer_text:
+                fact_problems.append(
+                    f"{EXPLAINER_FILE} lacks facts.json text {value!r}"
+                )
+
+        risk_auth = facts["risk_auth"]
+        sms_auth = facts["sms_auth"]
+        assert isinstance(risk_auth, dict)
+        assert isinstance(sms_auth, dict)
+        cycle_days = int(risk_auth["cycle_days"])
+        cycle_hours = int(sms_auth["cycle_hours"])
+        numeric_bindings = (
+            ("risk_auth.cycle_days", cycle_days),
+            ("sms_auth.cycle_hours", cycle_hours),
+        )
+        for fact_key, value in numeric_bindings:
+            pattern = re.compile(
+                rf'data-fact-key=["\']{re.escape(fact_key)}["\'][^>]*>'
+                rf"\s*{value}\s*<",
+                re.IGNORECASE,
+            )
+            if not pattern.search(explainer_source):
+                fact_problems.append(
+                    f"{EXPLAINER_FILE} does not bind {fact_key}={value}"
+                )
+
+        allowed_time_facts = {
+            (str(cycle_days), "天"),
+            (str(cycle_hours), "小时"),
+        }
+        for number, unit in re.findall(r"(?<!\d)(\d+)\s*(天|小时)", explainer_text):
+            if (number, unit) not in allowed_time_facts:
+                fact_problems.append(
+                    f"{EXPLAINER_FILE} has unsupported time fact {number} {unit}"
+                )
+
+        page_terminology = facts["page_terminology"]
+        assert isinstance(page_terminology, dict)
+        required_keywords = (
+            "税务 App",
+            str(page_terminology["must_use"]),
+        )
+        for keyword in required_keywords:
+            if keyword not in explainer_text:
+                fact_problems.append(f"{EXPLAINER_FILE} lacks keyword {keyword!r}")
+
+    checks.record(
+        "Explainer — fact consistency",
+        fact_problems,
+        "all page-approved facts.json copy is present; 183-day and 24-hour bindings match exactly; required account-mode terminology is present",
+    )
+
+    term_problems: list[str] = []
+    if not explainer_source:
+        term_problems.append(f"{EXPLAINER_FILE} unavailable")
+    else:
+        for term in FORBIDDEN_TERMS:
+            if term in explainer_source:
+                term_problems.append(
+                    f"{EXPLAINER_FILE} contains forbidden term {term!r}"
+                )
+        if facts:
+            page_terminology = facts["page_terminology"]
+            assert isinstance(page_terminology, dict)
+            forbidden_on_page = page_terminology["forbidden_on_page"]
+            assert isinstance(forbidden_on_page, list)
+            terms_to_scan = {
+                *EXPLAINER_PAGE_FORBIDDEN_TERMS,
+                *(str(term) for term in forbidden_on_page),
+            }
+            for term in sorted(terms_to_scan):
+                occurrence_count = explainer_source.count(term)
+                if occurrence_count:
+                    term_problems.append(
+                        f"{EXPLAINER_FILE} contains forbidden page term "
+                        f"{term!r} {occurrence_count} time(s); expected 0"
+                    )
+        if re.search(r"15\s*天\s*退\s*款", explainer_source):
+            term_problems.append(
+                f"{EXPLAINER_FILE} contains an unsupported 15-day refund promise"
+            )
+        if "\u65e0\u7406\u7531\u9000\u6b3e" in explainer_source:
+            term_problems.append(
+                f"{EXPLAINER_FILE} contains an unsupported no-reason refund promise"
+            )
+
+        unsupported_tax_patterns = {
+            "unlisted tax-rate claim": r"(?<![\w.])\d+(?:\.\d+)?\s*%",
+            "guaranteed tax outcome": (
+                r"(?:保证|承诺|确保).{0,12}(?:开票成功|开票额度|税率|免税)"
+            ),
+            "permanent authentication claim": r"(?:永久|终身).{0,8}(?:认证|有效)",
+            "authentication bypass claim": (
+                r"(?:无需|不用)(?:再|另外)?(?:做|进行|完成)?"
+                r"(?:实名|扫脸|验证码|认证)"
+            ),
+            "automated real-person authentication claim": (
+                r"自动.{0,8}(?:扫脸|输入.{0,4}验证码|完成.{0,4}认证)"
+            ),
+            "channel choice or switching copy": (
+                r"(?:选择|切换)通道|通道(?:选择|切换)"
+            ),
+        }
+        visible_text = explainer_parser.text
+        for label, pattern in unsupported_tax_patterns.items():
+            if re.search(pattern, visible_text):
+                term_problems.append(
+                    f"{EXPLAINER_FILE} contains {label} not supported by facts.json"
+                )
+
+    checks.record(
+        "Explainer — forbidden terms",
+        term_problems,
+        "RPA/乐企 each occur 0 times; site-wide bans and unsupported tax-rate, guarantee, bypass, permanence, auto-auth, and channel-switch claims are absent",
+    )
+
+    link_problems: list[str] = []
+    for file_name in (EXPLAINER_FILE, *EXPLAINER_ASSETS):
+        if not (ROOT / file_name).is_file():
+            link_problems.append(f"missing {file_name}")
+
+    for source_name in HTML_FILES:
+        parser = parsers.get(source_name)
+        if parser is None:
+            link_problems.append(f"{source_name} unavailable")
+            continue
+        explainer_links = [
+            link
+            for link in parser.links
+            if isinstance(link["attrs"], dict)
+            and link["attrs"].get("href") == EXPLAINER_FILE
+        ]
+        if len(explainer_links) != 1:
+            link_problems.append(
+                f"{source_name} must link to {EXPLAINER_FILE} exactly once "
+                f"(found {len(explainer_links)})"
+            )
+
+    if explainer_source:
+        expected_asset_refs = {
+            ("link", "href", "assets/style.css"),
+            ("link", "href", "assets/explainer.css"),
+            ("script", "src", "assets/explainer.js"),
+        }
+        actual_asset_refs = set(explainer_parser.asset_refs)
+        for reference in sorted(expected_asset_refs - actual_asset_refs):
+            link_problems.append(
+                f"{EXPLAINER_FILE} lacks local asset reference {reference[2]}"
+            )
+
+        for tag, attr, value in explainer_parser.asset_refs:
+            if is_external_reference(value):
+                link_problems.append(
+                    f"{EXPLAINER_FILE} loads external {tag} {attr}: {value}"
+                )
+
+        pricing_path = ROOT / "pricing.json"
+        try:
+            pricing = json.loads(pricing_path.read_text(encoding="utf-8"))
+            service_entity = str(pricing["service_entity"])
+        except (OSError, UnicodeError, json.JSONDecodeError, KeyError) as exc:
+            link_problems.append(f"cannot verify service entity ({exc})")
+        else:
+            if service_entity not in explainer_parser.text:
+                link_problems.append(
+                    f"{EXPLAINER_FILE} service entity differs from pricing.json"
+                )
+
+    checks.record(
+        "Explainer — links and files",
+        link_problems,
+        "three explainer deliverables exist; index and guide link exactly once; local assets and service entity are verified",
+    )
+
+    motion_problems: list[str] = []
+    css_path = ROOT / EXPLAINER_ASSETS[0]
+    js_path = ROOT / EXPLAINER_ASSETS[1]
+    try:
+        explainer_css = css_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        explainer_css = ""
+        motion_problems.append(f"cannot read {EXPLAINER_ASSETS[0]} ({exc})")
+    try:
+        explainer_js = js_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        explainer_js = ""
+        motion_problems.append(f"cannot read {EXPLAINER_ASSETS[1]} ({exc})")
+
+    if explainer_css and not re.search(
+        r"@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)",
+        explainer_css,
+        re.IGNORECASE,
+    ):
+        motion_problems.append(
+            f"{EXPLAINER_ASSETS[0]} lacks prefers-reduced-motion: reduce"
+        )
+    if explainer_css and not re.search(
+        r"prefers-reduced-motion[\s\S]*?animation\s*:\s*none\s*!important",
+        explainer_css,
+        re.IGNORECASE,
+    ):
+        motion_problems.append(
+            f"{EXPLAINER_ASSETS[0]} does not disable animation for reduced motion"
+        )
+    if explainer_js and "IntersectionObserver" not in explainer_js:
+        motion_problems.append(
+            f"{EXPLAINER_ASSETS[1]} does not use IntersectionObserver"
+        )
+    if explainer_js and "prefers-reduced-motion: reduce" not in explainer_js:
+        motion_problems.append(
+            f"{EXPLAINER_ASSETS[1]} does not react to reduced-motion preference"
+        )
+    if explainer_css and not re.search(
+        r"overflow-x\s*:\s*(?:clip|hidden)", explainer_css, re.IGNORECASE
+    ):
+        motion_problems.append(
+            f"{EXPLAINER_ASSETS[0]} lacks a horizontal overflow guard"
+        )
+    if explainer_css and re.search(r"\b100vw\b", explainer_css):
+        motion_problems.append(
+            f"{EXPLAINER_ASSETS[0]} uses 100vw, a common mobile overflow source"
+        )
+
+    if explainer_source:
+        svg_count = len(re.findall(r"<svg\b", explainer_source, re.IGNORECASE))
+        if svg_count < 4:
+            motion_problems.append(
+                f"{EXPLAINER_FILE} needs multiple inline SVG illustrations"
+            )
+        if re.search(r"<(?:img|image)\b", explainer_source, re.IGNORECASE):
+            motion_problems.append(
+                f"{EXPLAINER_FILE} must use inline SVG instead of image files"
+            )
+        if re.search(
+            r"<svg\b[\s\S]*?(?:href|src)\s*=\s*[\"'](?:https?:)?//",
+            explainer_source,
+            re.IGNORECASE,
+        ):
+            motion_problems.append(
+                f"{EXPLAINER_FILE} inline SVG contains an external reference"
+            )
+    else:
+        motion_problems.append(f"{EXPLAINER_FILE} unavailable")
+
+    combined_assets = "\n".join((explainer_source, explainer_css, explainer_js))
+    if re.search(
+        r"@import\b|url\(\s*['\"]?(?:https?:)?//|"
+        r"\b(?:react|react-dom|vue|angular|bootstrap|tailwind)(?:\.min)?\.(?:js|css)\b",
+        combined_assets,
+        re.IGNORECASE,
+    ):
+        motion_problems.append("explainer contains an external or framework asset")
+
+    checks.record(
+        "Explainer — motion and inline SVG",
+        motion_problems,
+        "IntersectionObserver, reduced-motion fallback, mobile overflow guard, inline SVG, and local zero-framework assets are present",
+    )
+
+
 def main() -> int:
     checks = Checks()
     pricing, sources, parsers = load_sources(checks)
@@ -518,6 +996,7 @@ def main() -> int:
             ["cannot continue because pricing.json or HTML files are unavailable"],
             "",
         )
+    check_explainer(checks, sources, parsers)
     if (ROOT / "README.md").is_file():
         check_readme(checks)
     return checks.emit()

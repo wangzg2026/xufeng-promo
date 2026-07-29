@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="面向美菜第三方经销商的认证与开票讲解：看懂税局数电账号模式的两次认证、开票流程和数电发票基础知识。">
+  <title>认证与开票讲解｜开票省点事</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/explainer.css">
+  <script src="assets/explainer.js" defer></script>
+</head>
+<body class="explainer-page">
+  <a class="skip-link" href="#explainer-main">跳到讲解正文</a>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="index.html" aria-label="返回开票省点事首页">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <path d="M9 6.5h11.5L25 11v14.5H9z"></path>
+            <path d="M20.5 6.5V11H25M13 16h8M13 20h6"></path>
+          </svg>
+        </span>
+        <span>
+          <strong>开票省点事</strong>
+          <small>美菜第三方经销商服务</small>
+        </span>
+      </a>
+      <a class="header-link" href="guide.html">操作指南</a>
+    </div>
+  </header>
+
+  <main id="explainer-main">
+    <section class="explainer-hero" aria-labelledby="explainer-title">
+      <div class="explainer-orb explainer-orb-one" aria-hidden="true"></div>
+      <div class="explainer-orb explainer-orb-two" aria-hidden="true"></div>
+      <div class="shell explainer-hero-grid">
+        <div class="explainer-hero-copy reveal">
+          <p class="eyebrow"><span aria-hidden="true">●</span> 认证与开票讲解</p>
+          <h1 id="explainer-title">开票前，<br><span>先看懂两次认证</span></h1>
+          <p class="explainer-lead">扫脸与短信验证码，为什么都需要？顺着页面往下看，认证、开票和数电发票一次讲清。</p>
+          <a class="scroll-cue" href="#why-auth">
+            <span>向下看懂流程</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 9 6 6 6-6"></path>
+            </svg>
+          </a>
+        </div>
+
+        <div class="hero-story-visual reveal" aria-label="认证后完成开票的流程示意">
+          <svg viewBox="0 0 440 410" aria-hidden="true">
+            <defs>
+              <linearGradient id="hero-panel" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ffffff"></stop>
+                <stop offset="1" stop-color="#e6f5f2"></stop>
+              </linearGradient>
+              <linearGradient id="hero-brand" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#0ca092"></stop>
+                <stop offset="1" stop-color="#04655f"></stop>
+              </linearGradient>
+            </defs>
+            <path class="hero-loop" d="M91 184C77 82 196 29 275 82c68 45 37 106 88 151 53 48 3 132-74 105-74-26-130 43-196-9-55-43-50-112-2-145Z"></path>
+            <g class="hero-phone">
+              <rect x="218" y="60" width="143" height="265" rx="28" fill="#102a2f"></rect>
+              <rect x="228" y="72" width="123" height="240" rx="20" fill="url(#hero-panel)"></rect>
+              <path d="M269 82h41" stroke="#b9cfcc" stroke-width="5" stroke-linecap="round"></path>
+              <rect x="244" y="112" width="91" height="77" rx="13" fill="#fff"></rect>
+              <path d="M258 126h19v19h-19zm43 0h20v19h-20zm-43 42h19v-11h11v-12h-11m44 23h-20v-12h-12v-11h12" fill="none" stroke="#087f78" stroke-width="6"></path>
+              <circle class="hero-scan-ring" cx="290" cy="229" r="29" fill="none" stroke="#0ca092" stroke-width="3"></circle>
+              <path d="M276 225c0-8 6-14 14-14s14 6 14 14m-36 25c5-8 13-12 22-12s17 4 22 12" fill="none" stroke="#087f78" stroke-width="3" stroke-linecap="round"></path>
+              <rect x="248" y="274" width="84" height="17" rx="8.5" fill="#d6eeea"></rect>
+            </g>
+            <g class="hero-robot">
+              <rect x="74" y="178" width="148" height="111" rx="30" fill="#fff" stroke="#dce8e5" stroke-width="3"></rect>
+              <path d="M148 158v21m-10-30a10 10 0 1 0 20 0 10 10 0 0 0-20 0Z" fill="#fff" stroke="#087f78" stroke-width="4"></path>
+              <circle cx="119" cy="225" r="11" fill="#087f78"></circle>
+              <circle cx="178" cy="225" r="11" fill="#087f78"></circle>
+              <path d="M126 259c14 11 31 11 45 0" fill="none" stroke="#ff7849" stroke-width="5" stroke-linecap="round"></path>
+              <path d="M73 211H52c-13 0-13 45 0 45h22m149-45h19c14 0 14 45 0 45h-19" fill="none" stroke="#087f78" stroke-width="8" stroke-linecap="round"></path>
+            </g>
+            <g class="hero-shield">
+              <path d="M188 83c22 0 40-10 40-10s18 10 40 10v35c0 32-22 52-40 61-18-9-40-29-40-61Z" fill="url(#hero-brand)"></path>
+              <path d="m210 124 12 12 25-29" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+            </g>
+            <g class="hero-ticket">
+              <rect x="66" y="305" width="171" height="64" rx="16" fill="#fff" stroke="#dce8e5" stroke-width="3"></rect>
+              <circle cx="94" cy="337" r="13" fill="#e6f5f2"></circle>
+              <path d="m88 337 5 5 9-11" fill="none" stroke="#087f78" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="M119 327h88m-88 20h61" stroke="#9bb5b2" stroke-width="6" stroke-linecap="round"></path>
+            </g>
+          </svg>
+          <span class="visual-label visual-label-auth">实名授权</span>
+          <span class="visual-label visual-label-invoice">开票完成</span>
+        </div>
+      </div>
+    </section>
+
+    <nav class="story-nav" aria-label="页面章节">
+      <a href="#why-auth"><span>第一幕</span>为什么认证</a>
+      <a href="#two-auth"><span>第二幕</span>两次认证</a>
+      <a href="#invoice-flow"><span>第三幕</span>开票流程</a>
+      <a href="#digital-invoice"><span>第四幕</span>数电知识</a>
+    </nav>
+
+    <section class="story-section why-section" id="why-auth" aria-labelledby="why-title">
+      <div class="shell story-grid">
+        <div class="story-heading reveal">
+          <p class="section-kicker">第一幕 · 为什么要认证</p>
+          <h2 id="why-title">系统在操作，<br>授权必须来自你</h2>
+          <p>先看机器人怎么替你操作，再看为什么会出现实名核验。</p>
+          <p class="mode-intro">这种方式叫“<strong data-fact-key="channel_mode.name">税局数电账号模式</strong>”。</p>
+        </div>
+
+        <div class="tax-scene reveal" aria-label="系统在电子税务局操作并触发实名核验示意">
+          <div class="tax-browser">
+            <div class="browser-bar">
+              <span></span><span></span><span></span>
+              <strong>电子税务局</strong>
+            </div>
+            <div class="browser-content">
+              <div class="browser-menu" aria-hidden="true">
+                <i></i><i></i><i></i><i></i>
+              </div>
+              <div class="browser-work">
+                <div class="browser-title"><i></i><span></span></div>
+                <div class="browser-form"><i></i><i></i><i></i></div>
+                <div class="browser-button">开票</div>
+              </div>
+            </div>
+            <div class="mini-robot" aria-hidden="true">
+              <svg viewBox="0 0 120 120">
+                <path d="M60 24V13m-7-7a7 7 0 1 0 14 0 7 7 0 0 0-14 0Z" fill="#fff" stroke="currentColor" stroke-width="5"></path>
+                <rect x="18" y="26" width="84" height="68" rx="23" fill="#fff" stroke="currentColor" stroke-width="5"></rect>
+                <circle cx="44" cy="56" r="7" fill="currentColor"></circle>
+                <circle cx="76" cy="56" r="7" fill="currentColor"></circle>
+                <path d="M43 77c10 7 24 7 34 0M18 52H8v25h10m84-25h10v25h-10" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"></path>
+              </svg>
+              <span>系统代操作</span>
+            </div>
+            <div class="auth-shield" aria-hidden="true">
+              <svg viewBox="0 0 120 140">
+                <path d="M13 27C39 27 60 13 60 13s21 14 47 14v42c0 36-25 59-47 70-22-11-47-34-47-70Z"></path>
+                <path d="m37 72 15 15 32-37"></path>
+              </svg>
+              <strong>实名核验</strong>
+            </div>
+          </div>
+          <p class="scene-caption"><span aria-hidden="true">●</span> 系统替你跑腿，实名授权仍由本人完成</p>
+        </div>
+
+        <blockquote class="why-answer reveal">
+          <span aria-hidden="true">“</span>
+          <p data-fact-key="channel_mode.desc">系统使用你实名认证过的税局数电账号，在电子税务局完成开票操作——相当于系统替你跑腿，账号和发票始终是你自己的</p>
+          <p data-fact-key="channel_mode.why_auth">正因为开票用的是你的数电账号，税务机关要求账号本人实名授权：短信验证码证明手机号是你本人，扫脸认证证明是你本人授权。这是国家的实名安全要求，不是平台额外设置的门槛</p>
+        </blockquote>
+      </div>
+    </section>
+
+    <section class="story-section auth-section" id="two-auth" aria-labelledby="auth-title">
+      <div class="shell">
+        <div class="section-heading explainer-heading reveal">
+          <p class="section-kicker">第二幕 · 两次认证长什么样</p>
+          <h2 id="auth-title">一次扫脸，一个验证码</h2>
+          <p>两种认证各有自己的周期和操作方式；不开票时，都不需要做。</p>
+        </div>
+
+        <div class="auth-card-grid">
+          <article class="auth-card face-card reveal">
+            <div class="auth-card-top">
+              <div>
+                <p class="card-label">风险认证</p>
+                <h3 data-fact-key="risk_auth.name">风险认证（扫脸认证）</h3>
+              </div>
+              <span class="required-pill">强制</span>
+            </div>
+            <div class="auth-visual face-visual" aria-label="用税务 App 扫码并完成人脸识别示意">
+              <svg viewBox="0 0 360 260" aria-hidden="true">
+                <rect x="35" y="23" width="138" height="214" rx="26" fill="#102a2f"></rect>
+                <rect x="44" y="34" width="120" height="190" rx="18" fill="#fff"></rect>
+                <path d="M89 46h30" stroke="#9fb4b2" stroke-width="5" stroke-linecap="round"></path>
+                <path d="M67 75h25v25H67zm51 0h25v25h-25zm-51 68h25v-25h15v-18H92m51 43h-25v-18h-17v-25h17" fill="none" stroke="#087f78" stroke-width="8"></path>
+                <path class="qr-scan" d="M57 109h95" stroke="#ff7849" stroke-width="4" stroke-linecap="round"></path>
+                <path d="M173 126h37" stroke="#7aa9a3" stroke-width="4" stroke-dasharray="7 7"></path>
+                <path d="m204 116 15 10-15 10" fill="none" stroke="#7aa9a3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                <circle cx="279" cy="127" r="61" fill="#e6f5f2"></circle>
+                <path d="M255 121c0-14 11-25 24-25s24 11 24 25m-61 43c8-15 21-23 37-23s29 8 37 23" fill="none" stroke="#087f78" stroke-width="6" stroke-linecap="round"></path>
+                <path class="face-bracket" d="M243 107V86h21m51 0h20v21m0 43v20h-20m-51 0h-21v-20" fill="none" stroke="#ff7849" stroke-width="5" stroke-linecap="round"></path>
+              </svg>
+            </div>
+            <div class="fact-number">
+              <strong data-fact-key="risk_auth.cycle_days">183</strong>
+              <span>天一周期</span>
+            </div>
+            <p class="fact-cycle" data-fact-key="risk_auth.cycle">183 天一个周期，必须做一次（强制）</p>
+            <dl class="fact-list">
+              <div>
+                <dt>在哪里</dt>
+                <dd data-fact-key="risk_auth.where">数电账号管理中点“风险认证”</dd>
+              </div>
+              <div>
+                <dt>怎么做</dt>
+                <dd data-fact-key="risk_auth.method">用税务 App 扫页面二维码，手机上完成人脸识别</dd>
+              </div>
+              <div>
+                <dt>不开票时</dt>
+                <dd data-fact-key="risk_auth.note">不开票期间不需要做</dd>
+              </div>
+            </dl>
+          </article>
+
+          <article class="auth-card sms-card reveal">
+            <div class="auth-card-top">
+              <div>
+                <p class="card-label">登录认证</p>
+                <h3 data-fact-key="sms_auth.name">短信登录认证</h3>
+              </div>
+              <span class="day-pill">开票当天</span>
+            </div>
+            <div class="auth-visual sms-visual" aria-label="收到并输入手机短信验证码示意">
+              <svg viewBox="0 0 360 260" aria-hidden="true">
+                <rect x="102" y="20" width="156" height="220" rx="28" fill="#102a2f"></rect>
+                <rect x="112" y="31" width="136" height="196" rx="19" fill="#fff"></rect>
+                <path d="M158 43h44" stroke="#9fb4b2" stroke-width="5" stroke-linecap="round"></path>
+                <rect x="129" y="72" width="102" height="57" rx="15" fill="#e6f5f2"></rect>
+                <path d="m144 91 36 25 36-25" fill="none" stroke="#087f78" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="m144 113 25-19m47 19-25-19" fill="none" stroke="#79aaa5" stroke-width="4" stroke-linecap="round"></path>
+                <g class="code-dots">
+                  <circle cx="139" cy="165" r="10"></circle>
+                  <circle cx="166" cy="165" r="10"></circle>
+                  <circle cx="194" cy="165" r="10"></circle>
+                  <circle cx="221" cy="165" r="10"></circle>
+                </g>
+                <rect x="135" y="192" width="90" height="15" rx="7.5" fill="#d6eeea"></rect>
+                <path d="M78 93H46c-13 0-23 10-23 23v32c0 13 10 23 23 23h21l15 14v-14h8" fill="#fff0e9" stroke="#ff7849" stroke-width="4" stroke-linejoin="round"></path>
+                <path d="M43 123h27m-27 19h18" stroke="#ff7849" stroke-width="5" stroke-linecap="round"></path>
+              </svg>
+            </div>
+            <div class="fact-number">
+              <strong data-fact-key="sms_auth.cycle_hours">24</strong>
+              <span>小时一次</span>
+            </div>
+            <p class="fact-cycle" data-fact-key="sms_auth.cycle">24 小时一次，仅开票当天需要</p>
+            <dl class="fact-list">
+              <div>
+                <dt>怎么做</dt>
+                <dd data-fact-key="sms_auth.method">电子税务局登录时输入手机短信验证码</dd>
+              </div>
+              <div>
+                <dt>不开票时</dt>
+                <dd data-fact-key="sms_auth.note">不开票不用做</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+
+        <aside class="recovery-strip reveal" aria-labelledby="recovery-title">
+          <span class="recovery-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32">
+              <path d="M26 13a11 11 0 1 0 1 7M26 6v7h-7"></path>
+              <path d="M16 10v7l5 3"></path>
+            </svg>
+          </span>
+          <div>
+            <h3 id="recovery-title">如果短信认证漏做了</h3>
+            <p data-fact-key="auth_failure_recovery">若因未做短信登录认证导致开票失败：开票员先完成短信登录认证，认证成功后，在开票管理中全选未开发票，点“开票”即可</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="story-section flow-section" id="invoice-flow" aria-labelledby="flow-title">
+      <div class="shell">
+        <div class="section-heading explainer-heading reveal">
+          <p class="section-kicker">第三幕 · 开票流程</p>
+          <h2 id="flow-title">你核对并点击，<br>系统接着完成</h2>
+          <p>订单进入、本人确认、系统通过你的税局数电账号完成开票、送达受票方，按顺序往前走。</p>
+        </div>
+
+        <ol class="flow-steps" aria-label="开票流程四步">
+          <li class="flow-step reveal">
+            <span class="flow-index">一</span>
+            <div class="flow-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64">
+                <rect x="10" y="11" width="44" height="42" rx="9"></rect>
+                <path d="M19 23h26M19 32h26M19 41h14"></path>
+              </svg>
+            </div>
+            <p data-fact-key="invoice_flow.0">订单数据自动进入工作台，不用手动录入</p>
+          </li>
+          <li class="flow-step reveal">
+            <span class="flow-index">二</span>
+            <div class="flow-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64">
+                <rect x="12" y="8" width="40" height="48" rx="10"></rect>
+                <path d="M23 21h18M23 30h12m-7 13 4 4 9-10"></path>
+              </svg>
+            </div>
+            <p data-fact-key="invoice_flow.1">你核对信息后点“开票”（关键操作必须本人点击）</p>
+          </li>
+          <li class="flow-step reveal">
+            <span class="flow-index">三</span>
+            <div class="flow-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64">
+                <path d="M12 17h15c7 0 11 5 11 12v18M38 29c0-7 4-12 11-12h4M38 47h15"></path>
+                <path d="m48 11 6 6-6 6M48 41l6 6-6 6"></path>
+              </svg>
+            </div>
+            <p data-fact-key="invoice_flow.2">系统通过你的税局数电账号自动完成开票</p>
+          </li>
+          <li class="flow-step reveal">
+            <span class="flow-index">四</span>
+            <div class="flow-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64">
+                <path d="M10 18h44v32H10z"></path>
+                <path d="m11 21 21 16 21-16M21 13h22"></path>
+              </svg>
+            </div>
+            <p data-fact-key="invoice_flow.3">开票成功，站内信/短信通知，发票送达受票方</p>
+          </li>
+        </ol>
+
+        <div class="channel-scene reveal" aria-labelledby="account-mode-title">
+          <div class="channel-copy">
+            <p class="card-label" data-fact-key="channel_mode.name">税局数电账号模式</p>
+            <h3 id="account-mode-title">账号和发票，始终是你自己的</h3>
+            <p class="merchant-view" data-fact-key="channel_mode.desc">系统使用你实名认证过的税局数电账号，在电子税务局完成开票操作——相当于系统替你跑腿，账号和发票始终是你自己的</p>
+          </div>
+          <div class="account-route" aria-label="本人点击开票后，系统通过税局数电账号完成开票的示意">
+            <div class="account-node">
+              <span>本人操作</span>
+              <strong>点“开票”</strong>
+            </div>
+            <div class="account-arrow" aria-hidden="true">
+              <svg viewBox="0 0 120 32">
+                <path d="M3 16h108"></path>
+                <path d="m101 6 10 10-10 10"></path>
+                <circle class="account-route-dot" cx="5" cy="16" r="5"></circle>
+              </svg>
+            </div>
+            <div class="account-node account-node-main">
+              <span>开票身份</span>
+              <strong>税局数电账号</strong>
+            </div>
+            <div class="account-arrow" aria-hidden="true">
+              <svg viewBox="0 0 120 32">
+                <path d="M3 16h108"></path>
+                <path d="m101 6 10 10-10 10"></path>
+                <circle class="account-route-dot account-route-dot-late" cx="5" cy="16" r="5"></circle>
+              </svg>
+            </div>
+            <div class="account-node">
+              <span>系统完成</span>
+              <strong>发票送达</strong>
+            </div>
+          </div>
+          <span class="unnoticed-pill">系统替你跑腿</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="story-section knowledge-section" id="digital-invoice" aria-labelledby="knowledge-title">
+      <div class="shell">
+        <div class="section-heading explainer-heading reveal">
+          <p class="section-kicker">第四幕 · 数电发票小知识</p>
+          <h2 id="knowledge-title">常见问题，<br>翻成容易懂的话</h2>
+          <p>从定义、设备、额度到交付和开错处理，逐个看清。</p>
+        </div>
+
+        <div class="knowledge-grid">
+          <article class="knowledge-card knowledge-card-featured reveal">
+            <span class="knowledge-icon" aria-hidden="true">
+              <svg viewBox="0 0 56 56">
+                <path d="M13 7h23l8 8v34H13z"></path>
+                <path d="M36 7v9h8M20 25h17M20 33h17M20 41h10"></path>
+              </svg>
+            </span>
+            <h3 data-fact-key="shudian_knowledge.0.q">什么是数电发票？</h3>
+            <p data-fact-key="shudian_knowledge.0.a">全面数字化的电子发票，发票信息以数据形式存在，开票、交付、报销、入账全程线上完成</p>
+          </article>
+          <article class="knowledge-card reveal">
+            <span class="knowledge-icon" aria-hidden="true">
+              <svg viewBox="0 0 56 56">
+                <rect x="9" y="16" width="38" height="27" rx="7"></rect>
+                <path d="M18 16V9h20v7M21 29h14M28 23v12"></path>
+              </svg>
+            </span>
+            <h3 data-fact-key="shudian_knowledge.1.q">还需要税控盘 / UKey 吗？</h3>
+            <p data-fact-key="shudian_knowledge.1.a">不需要。数电票不依赖税控专用设备，实名认证的数电账号就是开票身份</p>
+          </article>
+          <article class="knowledge-card reveal">
+            <span class="knowledge-icon" aria-hidden="true">
+              <svg viewBox="0 0 56 56">
+                <path d="M10 45V28m12 17V20m12 25V11m12 34V25"></path>
+                <path d="m9 18 11-8 12 6 14-8"></path>
+              </svg>
+            </span>
+            <h3 data-fact-key="shudian_knowledge.2.q">开票额度怎么回事？</h3>
+            <p data-fact-key="shudian_knowledge.2.a">数电票按“授信额度”管理，税务机关根据企业情况动态调整，开票占用额度、按月刷新</p>
+          </article>
+          <article class="knowledge-card reveal">
+            <span class="knowledge-icon" aria-hidden="true">
+              <svg viewBox="0 0 56 56">
+                <rect x="8" y="13" width="40" height="31" rx="7"></rect>
+                <path d="m9 17 19 14 19-14"></path>
+              </svg>
+            </span>
+            <h3 data-fact-key="shudian_knowledge.3.q">发票怎么交给客户？</h3>
+            <p data-fact-key="shudian_knowledge.3.a">开出后可通过短信、邮箱或下载文件（PDF/OFD/XML）交付，客户在全国增值税发票查验平台可查验真伪</p>
+          </article>
+          <article class="knowledge-card reveal">
+            <span class="knowledge-icon" aria-hidden="true">
+              <svg viewBox="0 0 56 56">
+                <path d="M44 22a17 17 0 1 0 1 13"></path>
+                <path d="M44 10v12H32M22 24h12M22 32h8"></path>
+              </svg>
+            </span>
+            <h3 data-fact-key="shudian_knowledge.4.q">开错了怎么办？</h3>
+            <p data-fact-key="shudian_knowledge.4.a">数电票红字冲销流程大幅简化：发起红冲，受票方在线确认后即可生成红字发票，再开正确的</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="explainer-closing">
+      <div class="shell closing-card reveal">
+        <div>
+          <p class="section-kicker light">讲解看完了</p>
+          <h2>认证是本人授权，<br>开票由系统接着完成</h2>
+          <p>需要实际操作时，回到图文指南按步骤办理。</p>
+        </div>
+        <div class="closing-actions">
+          <a class="button button-light" href="guide.html">查看操作指南</a>
+          <a class="closing-link" href="index.html">返回介绍首页 <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer explainer-footer">
+    <div class="shell footer-inner">
+      <div>
+        <strong>开票省点事</strong>
+        <p data-fact-key="compliance_note">各项税务规则以税务机关最新规定为准</p>
+      </div>
+      <p class="entity">服务主体：<span data-service-entity>北京旭峰嘉晟科技有限公司</span></p>
+    </div>
+  </footer>
+</body>
+</html>
