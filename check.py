@@ -187,6 +187,10 @@ def load_sources(checks: Checks) -> tuple[dict[str, object], dict[str, str], dic
         "first_year_price": int,
         "renewal_price": int,
         "unit": str,
+        "promo_start": str,
+        "promo_end": str,
+        "promo_slogan": str,
+        "promo_policy": str,
         "refund_slogan": str,
         "refund_policy": str,
         "refund_channel": str,
@@ -229,6 +233,8 @@ def check_pricing(
         "first_year_price",
         "renewal_price",
         "unit",
+        "promo_slogan",
+        "promo_policy",
         "refund_slogan",
         "refund_policy",
         "refund_channel",
@@ -241,6 +247,8 @@ def check_pricing(
     first = int(pricing["first_year_price"])
     renewal = int(pricing["renewal_price"])
     unit = str(pricing["unit"])
+    promo_slogan = str(pricing["promo_slogan"])
+    promo_policy = str(pricing["promo_policy"])
     refund_slogan = str(pricing["refund_slogan"])
     refund = str(pricing["refund_policy"])
     refund_channel = str(pricing["refund_channel"])
@@ -290,6 +298,10 @@ def check_pricing(
                         f"{name} uses {amount} outside the exact '{unit}' price context"
                     )
 
+        if promo_slogan not in text:
+            problems.append(f"{name} promo slogan differs from pricing.json")
+        if promo_policy not in text:
+            problems.append(f"{name} promo policy differs from pricing.json")
         if refund_slogan not in text:
             problems.append(f"{name} refund slogan differs from pricing.json")
         if refund not in text:

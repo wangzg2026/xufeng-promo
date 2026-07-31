@@ -1905,3 +1905,35 @@ summary:focus-visible {
     content: "";
   }
 }
+
+/* Promotional period notice */
+.promo-strip {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(20, 116, 96, 0.12), rgba(20, 116, 96, 0.04));
+  border: 1px solid rgba(20, 116, 96, 0.28);
+  border-radius: var(--radius-md);
+}
+
+.promo-strip strong {
+  display: block;
+  color: var(--brand-strong, var(--brand));
+  font-size: 1.02rem;
+}
+
+.promo-strip p {
+  margin: 6px 0 0;
+  color: var(--ink-soft, #4b5563);
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+.promo-inline {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(20, 116, 96, 0.08);
+  border-left: 3px solid var(--brand);
+  border-radius: 8px;
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
