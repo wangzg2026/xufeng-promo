@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="开票省点事在线留言：按模板填写企业税号、邮箱和问题内容，提交后由客服跟进并邮件回复。">
+  <title>在线留言｜开票省点事</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="guide-page message-page">
+  <a class="skip-link" href="#message-main">跳到留言表单</a>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="index.html" aria-label="返回开票省点事首页">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" role="img">
+            <path d="M9 6.5h11.5L25 11v14.5H9z"></path>
+            <path d="M20.5 6.5V11H25M13 16h8M13 20h6"></path>
+          </svg>
+        </span>
+        <span>
+          <strong>开票省点事</strong>
+          <small>美菜第三方经销商服务</small>
+        </span>
+      </a>
+      <nav class="header-nav" aria-label="主要导航">
+        <a class="header-link" href="index.html">首页</a>
+        <a class="header-link" href="guide.html">操作指南</a>
+        <a class="header-link" href="invoice-explainer.html">认证讲解</a>
+        <a class="header-link" href="manual.html">开票手册</a>
+        <a class="header-link" href="message.html">在线留言</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="message-main">
+    <section class="guide-hero">
+      <div class="shell">
+        <p class="eyebrow"><span aria-hidden="true">●</span> 有问题先留言</p>
+        <h1>在线留言</h1>
+        <p>按模板填写，客服看到后会通过<strong>邮件</strong>回复你。企业税号和邮箱都要填写，方便我们核对情况后再答复。</p>
+        <p class="message-hint">已经开通的商户，也可以从美菜卖家后台「发票管理 → 旭峰注册」进入注册页，在右下角提交工单。</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell message-shell">
+        <form id="inquiryForm" class="message-card" novalidate>
+          <div class="message-field">
+            <label for="inquiryCategory">问题类型</label>
+            <select id="inquiryCategory" name="category" required>
+              <option value="activation">开通与注册</option>
+              <option value="invoicing">开票问题</option>
+              <option value="renewal">续费与付款</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+
+          <div class="message-field">
+            <label for="inquiryTaxpayer">企业税号（统一社会信用代码）<span class="required">必填</span></label>
+            <input id="inquiryTaxpayer" name="taxpayerNum" type="text" inputmode="latin"
+                   autocomplete="off" maxlength="20" placeholder="例如 91110108MA01ABCD2X" required>
+            <p class="message-error" id="inquiryTaxpayerError"></p>
+          </div>
+
+          <div class="message-field">
+            <label for="inquiryEmail">回信邮箱<span class="required">必填</span></label>
+            <input id="inquiryEmail" name="email" type="email" autocomplete="email"
+                   maxlength="254" placeholder="例如 boss@example.com" required>
+            <p class="message-error" id="inquiryEmailError"></p>
+          </div>
+
+          <div class="message-field">
+            <label for="inquiryContent">留言内容<span class="required">必填</span></label>
+            <textarea id="inquiryContent" name="content" rows="5" maxlength="500"
+                      placeholder="请描述你遇到的情况，例如：在卖家后台点旭峰注册提示税号不匹配，该怎么处理？" required></textarea>
+            <p class="message-counter"><span id="inquiryCount">0</span>/500</p>
+            <p class="message-error" id="inquiryContentError"></p>
+          </div>
+
+          <div class="message-field">
+            <label for="inquiryCaptcha">图形验证码<span class="required">必填</span></label>
+            <div class="message-captcha">
+              <input id="inquiryCaptcha" name="captchaAnswer" type="text" inputmode="latin"
+                     autocomplete="off" maxlength="8" required>
+              <button type="button" id="inquiryCaptchaRefresh" aria-label="刷新图形验证码">
+                <img id="inquiryCaptchaImage" alt="图形验证码">
+              </button>
+            </div>
+            <p class="message-error" id="inquiryCaptchaError"></p>
+          </div>
+
+          <p class="message-status" id="inquiryStatus" role="status"></p>
+          <button class="button button-primary button-full" type="submit" id="inquirySubmit">提交留言</button>
+          <p class="message-footnote">提交即表示同意我们使用你填写的邮箱回复本次问题。请勿在留言中填写密码、验证码等敏感信息。</p>
+        </form>
+
+        <div class="message-card message-success hidden" id="inquirySuccess">
+          <h2>留言已提交</h2>
+          <p>留言编号 <strong id="inquiryTicketId"></strong>，请留意邮箱回复。</p>
+          <button class="button button-quiet" type="button" id="inquiryAgain">再提交一条</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div>
+        <strong>开票省点事</strong>
+        <small>在线留言</small>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/message.js" defer></script>
+</body>
+</html>

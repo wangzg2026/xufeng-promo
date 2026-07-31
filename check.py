@@ -15,7 +15,8 @@ ROOT = Path(__file__).resolve().parent
 HTML_FILES = ("index.html", "guide.html")
 EXPLAINER_FILE = "invoice-explainer.html"
 MANUAL_FILE = "manual.html"
-NAV_PAGE_FILES = (*HTML_FILES, EXPLAINER_FILE, MANUAL_FILE)
+MESSAGE_FILE = "message.html"
+NAV_PAGE_FILES = (*HTML_FILES, EXPLAINER_FILE, MANUAL_FILE, MESSAGE_FILE)
 EXPLAINER_ASSETS = ("assets/explainer.css", "assets/explainer.js")
 FACTS_FILE = "facts.json"
 EXPLAINER_PAGE_FORBIDDEN_TERMS = ("RPA", "乐企")
@@ -512,6 +513,56 @@ def check_static_stack(checks: Checks, sources: dict[str, str]) -> None:
         "Zero-framework stack",
         problems,
         "plain HTML/CSS with no scripts, framework assets, CDN, or web fonts",
+    )
+
+
+def check_message_form(checks: Checks) -> None:
+    problems: list[str] = []
+    try:
+        source = (ROOT / MESSAGE_FILE).read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        checks.record("message form", [f"cannot read {MESSAGE_FILE} ({exc})"], "")
+        return
+
+    script = ROOT / "assets" / "message.js"
+    if not script.is_file():
+        problems.append("assets/message.js is missing")
+        script_source = ""
+    else:
+        script_source = script.read_text(encoding="utf-8")
+
+    # 税号与邮箱必填是产品硬要求，前后端都不能悄悄放松。
+    for field_id in ('id="inquiryTaxpayer"', 'id="inquiryEmail"', 'id="inquiryContent"'):
+        if field_id not in source:
+            problems.append(f"{MESSAGE_FILE} lacks field {field_id}")
+            continue
+        # 只看这一个标签自身（到最近的 '>' 为止），否则会把下一个字段的
+        # required 误算进来，形成永远通过的假断言。
+        tag = source.split(field_id, 1)[1].split(">", 1)[0]
+        if "required" not in tag:
+            problems.append(f"{MESSAGE_FILE} field {field_id} is not marked required")
+
+    if source.count("必填") < 3:
+        problems.append(f"{MESSAGE_FILE} does not label taxpayer/email/content as 必填")
+    if 'id="inquiryCaptcha"' not in source:
+        problems.append(f"{MESSAGE_FILE} lacks the captcha field that keeps bots out")
+
+    if "https://fapiao.chinavtax.com" not in script_source:
+        problems.append("assets/message.js does not post to the production API over https")
+    if "/api/public/inquiries" not in script_source:
+        problems.append("assets/message.js does not call the public inquiry endpoint")
+    if re.search(r"https?://(?!fapiao\.chinavtax\.com)[\w.-]+", script_source):
+        problems.append("assets/message.js references an unexpected external host")
+
+    for name in (MESSAGE_FILE,):
+        page = source
+        if re.search(r"<script\b[^>]*\bsrc=[\"'](?!assets/)", page):
+            problems.append(f"{name} loads a script from outside assets/")
+
+    checks.record(
+        "message form",
+        problems,
+        "taxpayer/email/content are required, captcha is present, and the form posts only to the production inquiry API",
     )
 
 
@@ -1098,6 +1149,7 @@ def main() -> int:
         )
     check_explainer(checks, sources, parsers)
     check_manual(checks)
+    check_message_form(checks)
     if (ROOT / "README.md").is_file():
         check_readme(checks)
     return checks.emit()
