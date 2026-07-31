@@ -547,6 +547,10 @@ def check_message_form(checks: Checks) -> None:
     if 'id="inquiryCaptcha"' not in source:
         problems.append(f"{MESSAGE_FILE} lacks the captcha field that keeps bots out")
 
+    style = (ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+    if 'class="' in source and "hidden" in source and not re.search(r"\.hidden\s*\{", style):
+        problems.append("assets/style.css lacks a .hidden rule, so hidden panels stay visible")
+
     if "https://fapiao.chinavtax.com" not in script_source:
         problems.append("assets/message.js does not post to the production API over https")
     if "/api/public/inquiries" not in script_source:

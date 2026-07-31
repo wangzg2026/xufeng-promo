@@ -2067,3 +2067,8 @@ summary:focus-visible {
 .message-success h2 {
   margin-top: 0;
 }
+
+/* 通用隐藏（message.html 的成功卡片等依赖它，缺了会导致内容常驻可见） */
+.hidden {
+  display: none !important;
+}
