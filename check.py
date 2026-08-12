@@ -190,6 +190,8 @@ def load_sources(checks: Checks) -> tuple[dict[str, object], dict[str, str], dic
         "unit": str,
         "promo_start": str,
         "promo_end": str,
+        "renewal_deadline": str,
+        "two_year_price": int,
         "promo_slogan": str,
         "promo_policy": str,
         "refund_slogan": str,
@@ -250,11 +252,13 @@ def check_pricing(
     unit = str(pricing["unit"])
     promo_slogan = str(pricing["promo_slogan"])
     promo_policy = str(pricing["promo_policy"])
+    two_year = str(pricing.get("two_year_price", ""))
+    renewal_deadline = str(pricing.get("renewal_deadline", ""))
     refund_slogan = str(pricing["refund_slogan"])
     refund = str(pricing["refund_policy"])
     refund_channel = str(pricing["refund_channel"])
     entity = str(pricing["service_entity"])
-    allowed_prices = {first, renewal}
+    allowed_prices = {first, renewal, int(pricing.get("two_year_price", 0))}
     problems: list[str] = []
 
     for name in HTML_FILES:
@@ -291,16 +295,24 @@ def check_pricing(
             if amount not in allowed_prices:
                 problems.append(f"{name} has unknown ¥ amount {amount}")
 
-        for amount in allowed_prices:
+        # 每档价格绑定自己的计价单位：年费按年，两年套餐按税号一次性。
+        unit_by_price = {first: unit, renewal: unit}
+        if pricing.get("two_year_price"):
+            unit_by_price[int(pricing["two_year_price"])] = "元/税号"
+        for amount, amount_unit in unit_by_price.items():
             for match in re.finditer(rf"(?<!\d){amount}(?!\d)", text):
-                context = text[match.start() : match.end() + len(unit) + 2]
-                if not re.match(rf"{amount}\s+{re.escape(unit)}", context):
+                context = text[match.start() : match.end() + len(amount_unit) + 2]
+                if not re.match(rf"{amount}\s+{re.escape(amount_unit)}", context):
                     problems.append(
-                        f"{name} uses {amount} outside the exact '{unit}' price context"
+                        f"{name} uses {amount} outside the exact '{amount_unit}' price context"
                     )
 
         if promo_slogan not in text:
             problems.append(f"{name} promo slogan differs from pricing.json")
+        if two_year and f"{two_year} 元/税号" not in text:
+            problems.append(f"{name} lacks the two-year bundle price {two_year} 元/税号")
+        if renewal_deadline and renewal_deadline.replace("-", "-") not in text:
+            problems.append(f"{name} lacks the renewal deadline {renewal_deadline}")
         if promo_policy not in text:
             problems.append(f"{name} promo policy differs from pricing.json")
         if refund_slogan not in text:
