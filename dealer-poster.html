@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>经销商海报 · 开票省点事 · 2026 免费期</title>
+<style>
+  /* ===== 可微调变量表 ===== */
+  :root {
+    --primary: #16386B;      /* 主色 深信任蓝 约60% */
+    --secondary: #F4F6FA;    /* 辅色 浅灰蓝底 约30% */
+    --accent: #2F6FED;       /* 强调色 亮蓝 约10%：CTA/徽标/重点 */
+    --ink: #1C2536;          /* 正文深色 */
+    --muted: #5B6B84;        /* 次要文字 */
+    --line: #D9E0EA;         /* 细线 */
+    --h1-size: 80px;         /* 主标题字号 */
+    --h2-size: 40px;         /* 副标题字号 */
+    --card-title-size: 42px; /* 卡片标题字号 */
+    --body-size: 30px;       /* 正文字号 */
+    --small-size: 24px;      /* 小字字号 */
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #14171D; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB",
+      "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 48px 24px 96px;
+  }
+  #stage { transform-origin: top center; }
+
+  /* ===== 画板 1080×1920 ===== */
+  #poster {
+    width: 1080px;
+    height: 1920px;
+    background: var(--secondary);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* 顶部品牌区（主色块） */
+  .top {
+    background: var(--primary);
+    color: #fff;
+    padding: 44px 80px 40px;
+  }
+  .brandlock {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+  }
+  .brandlock .name { font-size: 44px; font-weight: 700; letter-spacing: 2px; }
+  .brandlock .rule { flex: 1; height: 1px; background: rgba(255,255,255,.35); }
+  .brandlock .tag {
+    font-size: 26px; font-weight: 500; letter-spacing: 4px;
+    border: 1px solid rgba(255,255,255,.5);
+    padding: 10px 22px; border-radius: 999px;
+    color: rgba(255,255,255,.92);
+    white-space: nowrap;
+  }
+  .headline {
+    margin-top: 28px;
+    font-size: var(--h1-size);
+    line-height: 1.22;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+  .headline .free { color: #9CC1FF; }
+  .promo-note {
+    margin-top: 24px;
+    font-size: 32px;
+    font-weight: 600;
+    color: #9CC1FF;
+    letter-spacing: 1px;
+  }
+  .subline {
+    margin-top: 14px;
+    font-size: var(--h2-size);
+    font-weight: 400;
+    color: rgba(255,255,255,.82);
+    letter-spacing: 1px;
+  }
+  .deadline-chip {
+    margin-top: 28px;
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 16px 34px;
+    border-radius: 10px;
+  }
+
+  /* 中部利益卡 */
+  .benefits { padding: 40px 80px 0; display: flex; flex-direction: column; gap: 24px; }
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 32px 44px;
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+  }
+  .card .icon {
+    width: 76px; height: 76px; flex: none;
+    border-radius: 16px;
+    background: rgba(47,111,237,.10);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card .icon svg { width: 40px; height: 40px; stroke: var(--accent); }
+  .card h3 { font-size: var(--card-title-size); font-weight: 700; letter-spacing: 1px; }
+  .card p { margin-top: 14px; font-size: var(--body-size); line-height: 1.55; color: var(--muted); }
+  .card p b { color: var(--ink); font-weight: 600; }
+
+  /* 信任背书行 */
+  .trust {
+    margin: 30px 80px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 22px 8px;
+    display: flex;
+    justify-content: space-between;
+    white-space: nowrap;
+    font-size: 25px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .trust span::before { content: "· "; color: var(--accent); font-weight: 700; }
+
+  /* 底部 CTA 区 */
+  .cta {
+    margin-top: auto;
+    padding: 40px 80px 36px;
+    background: #fff;
+    border-top: 1px solid var(--line);
+  }
+  .cta-left { flex: 1; }
+  .cta-title { font-size: 32px; font-weight: 600; color: var(--muted); letter-spacing: 2px; }
+  .cta-path {
+    margin-top: 22px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 14px;
+    padding: 30px 36px;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1.4;
+  }
+  .cta-path .arrow { color: #9CC1FF; padding: 0 6px; }
+  .cta-feedback {
+    margin-top: 20px;
+    background: var(--secondary);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 28px;
+    font-size: 27px;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+  .cta-feedback b { color: var(--ink); font-weight: 600; }
+  .cta-note { margin-top: 14px; font-size: var(--small-size); color: var(--muted); line-height: 1.6; }
+
+  /* 页脚小字 */
+  .foot {
+    background: var(--secondary);
+    padding: 20px 80px 28px;
+    font-size: 22px;
+    color: #8593A9;
+    display: flex;
+    justify-content: space-between;
+    letter-spacing: .5px;
+  }
+
+  /* 导出按钮（不进画板） */
+  #toolbar {
+    position: fixed; top: 20px; right: 24px; z-index: 10;
+    display: flex; gap: 12px;
+  }
+  #toolbar button {
+    font-size: 14px; padding: 10px 16px; border-radius: 8px;
+    border: 1px solid #3A4150; background: #232833; color: #E8ECF3;
+    cursor: pointer;
+  }
+  #toolbar button:hover { background: #2E3542; }
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <button onclick="exportPng(2, '网页版')">导出 PNG（网页 2x）</button>
+  <button onclick="exportPng(3, '印刷版')">导出 PNG（印刷 3x）</button>
+</div>
+
+<div id="stage">
+<div id="poster">
+
+  <div class="top">
+    <div class="brandlock">
+      <span class="name">开票省点事</span>
+      <span class="rule"></span>
+      <span class="tag">美菜平台经销商专属</span>
+    </div>
+    <div class="headline">客户催发票时<br /><span class="free">别再忙着手填</span></div>
+    <div class="promo-note">2026 年内注册，开票资质全年免费用</div>
+    <div class="deadline-chip">免费期截止 2026 年 12 月 31 日</div>
+  </div>
+
+  <div class="benefits">
+    <div class="card">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 5-5.5"/></svg>
+      </div>
+      <div>
+        <h3>年内全程免费</h3>
+        <p>免费期内注册、开通到使用<b>不收任何费用</b>，服务可用至 2026 年 12 月 31 日。</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      </div>
+      <div>
+        <h3>线上一次办结</h3>
+        <p>从美菜卖家后台进入，<b>填报企业信息、上传营业执照</b>即可提交开通，短信验证确认，无需线下往返。</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-2.9 7.8-7 10-4.1-2.2-7-5.5-7-10V6l7-3z"/><path d="M9 11.5l2 2 4-4"/></svg>
+      </div>
+      <div>
+        <h3>政策透明可核</h3>
+        <p>2027 年起 <b>899 元/年/税号</b>；明年 6 月 30 日前续订次年仅 <b>799 元</b>，两年套餐 <b>1600 元</b>。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="trust">
+    <span>官方网关收款</span>
+    <span>不设自动扣费</span>
+    <span>人工工单支持</span>
+  </div>
+
+  <div class="cta">
+    <div class="cta-left">
+      <div class="cta-title">开通入口</div>
+      <div class="cta-path">登录美菜卖家后台<span class="arrow">→</span>发票管理<span class="arrow">→</span>旭峰注册</div>
+      <div class="cta-feedback">
+        <b>售后与咨询：</b>注册页内提交工单，人工处理后经页面或邮件回复。
+      </div>
+      <div class="cta-note">政策与价格详情：xufeng-promo.zeabur.app</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>服务主体：北京旭峰嘉晟科技有限公司</span>
+    <span>开票资质注册代办服务 · 仅限美菜平台签约经销商</span>
+  </div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+  // 预览缩放：画板过高时按视口缩小显示（导出不受影响，始终按原始 1080×1920 渲染）
+  function fitStage() {
+    var maxH = window.innerHeight - 96;
+    var scale = Math.min(1, maxH / 1920, (window.innerWidth - 48) / 1080);
+    document.getElementById("stage").style.transform = "scale(" + scale + ")";
+  }
+  fitStage();
+  window.addEventListener("resize", fitStage);
+
+  function exportPng(scale, label) {
+    if (typeof html2canvas === "undefined") {
+      alert("导出组件加载失败（需联网加载 html2canvas），请检查网络后刷新重试。");
+      return;
+    }
+    var stage = document.getElementById("stage");
+    var saved = stage.style.transform;
+    stage.style.transform = "none"; // 避免缩放影响截图
+    html2canvas(document.getElementById("poster"), {
+      scale: scale,
+      useCORS: true,
+      backgroundColor: null,
+    }).then(function (canvas) {
+      stage.style.transform = saved;
+      var a = document.createElement("a");
+      a.download = "经销商海报-2026免费期-" + label + "-" + canvas.width + "x" + canvas.height + ".png";
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    }).catch(function (e) {
+      stage.style.transform = saved;
+      alert("导出失败：" + e);
+    });
+  }
+</script>
+</body>
+</html>

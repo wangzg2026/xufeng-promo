@@ -16,6 +16,9 @@ HTML_FILES = ("index.html", "guide.html")
 EXPLAINER_FILE = "invoice-explainer.html"
 MANUAL_FILE = "manual.html"
 MESSAGE_FILE = "message.html"
+# 经销商海报：导出成 PNG 后会脱离仓库单独流传，价格写错追不回来，
+# 所以事实必须与 pricing.json 对齐；但不套用页面级的文案格式要求（版面有限）。
+POSTER_FILE = "dealer-poster.html"
 NAV_PAGE_FILES = (*HTML_FILES, EXPLAINER_FILE, MANUAL_FILE, MESSAGE_FILE)
 EXPLAINER_ASSETS = ("assets/explainer.css", "assets/explainer.js")
 FACTS_FILE = "facts.json"
@@ -579,6 +582,49 @@ def check_message_form(checks: Checks) -> None:
         "message form",
         problems,
         "taxpayer/email/content are required, captcha is present, and the form posts only to the production inquiry API",
+    )
+
+
+def check_dealer_poster(checks: Checks, pricing: dict) -> None:
+    """经销商海报的事实一致性：金额、免费期截止日、服务主体都以 pricing.json 为准。"""
+    problems: list[str] = []
+    try:
+        source = (ROOT / POSTER_FILE).read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        checks.record("dealer poster facts", [f"cannot read {POSTER_FILE} ({exc})"], "")
+        return
+
+    parser = SiteHTMLParser()
+    parser.feed(source)
+    parser.close()
+    text = parser.text
+
+    allowed_prices = {
+        int(pricing["first_year_price"]),
+        int(pricing["renewal_price"]),
+        int(pricing.get("two_year_price", 0)),
+    }
+    for pattern in (r"(?<!\d)(\d[\d,]*)\s*元", r"¥\s*(\d[\d,]*)"):
+        for match in re.finditer(pattern, text):
+            amount = int(match.group(1).replace(",", ""))
+            if amount not in allowed_prices:
+                problems.append(f"{POSTER_FILE} has unknown amount {amount}")
+
+    promo_end = str(pricing.get("promo_end", ""))
+    if promo_end:
+        year, month, day = promo_end.split("-")
+        spelled = f"{year} 年 {int(month)} 月 {int(day)} 日"
+        if promo_end not in text and spelled not in text:
+            problems.append(f"{POSTER_FILE} lacks promo_end {promo_end}")
+
+    entity = str(pricing.get("service_entity", ""))
+    if entity and entity not in text:
+        problems.append(f"{POSTER_FILE} lacks service entity {entity}")
+
+    checks.record(
+        "dealer poster facts",
+        problems,
+        "poster amounts, promo deadline, and service entity all match pricing.json",
     )
 
 
@@ -1166,6 +1212,7 @@ def main() -> int:
     check_explainer(checks, sources, parsers)
     check_manual(checks)
     check_message_form(checks)
+    check_dealer_poster(checks, pricing)
     if (ROOT / "README.md").is_file():
         check_readme(checks)
     return checks.emit()
