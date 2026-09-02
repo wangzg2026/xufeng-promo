@@ -37,10 +37,13 @@ REQUIRED_FILES = (
     "check.py",
     "README.md",
 )
+# 指南必须引用的步骤截图（均为真实截图）。step-05/06 已退役：免费期不经过
+# 收银台，对应步骤改为文字说明卡。
 PLACEHOLDER_IMAGES = {
-    f"assets/screenshots/step-{number:02d}.png" for number in range(1, 7)
+    f"assets/screenshots/step-{number:02d}.png" for number in range(1, 5)
 }
 FORBIDDEN_TERMS = (
+    "待审核人补充",
     "\u5305\u8fc7",
     "\u7edd\u5bf9",
     "\u767e\u5206\u767e",
@@ -416,7 +419,7 @@ def check_images(
     checks.record(
         "Screenshot placeholders",
         problems,
-        "step-01.png through step-06.png use safe paths, alt text, and figure captions",
+        "step-01 to step-04 real screenshots use safe paths, alt text, and captions",
     )
 
 

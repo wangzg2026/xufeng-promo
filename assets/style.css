@@ -900,6 +900,37 @@ summary:focus-visible {
   transform: translate(-50%, -50%);
 }
 
+/* 文字说明卡：替代截图的位置（免费期不经过收银台，无对应界面可截） */
+.text-shot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-height: 260px;
+  padding: 24px 26px;
+  background: #fff;
+  border: 1px dashed var(--line);
+  border-radius: calc(var(--radius-md) - 4px);
+}
+
+.text-shot strong {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.text-shot p {
+  margin: 0 0 10px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.compact-shot .text-shot {
+  min-height: 180px;
+}
+
 .screenshot-frame img {
   position: relative;
   z-index: 1;
