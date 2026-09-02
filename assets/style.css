@@ -887,18 +887,6 @@ summary:focus-visible {
   border-radius: var(--radius-md);
 }
 
-.screenshot-frame::before {
-  content: "截图待补";
-  position: absolute;
-  top: 42%;
-  left: 50%;
-  z-index: 0;
-  color: #92aaa7;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  transform: translate(-50%, -50%);
-}
 
 /* 文字说明卡：替代截图的位置（免费期不经过收银台，无对应界面可截） */
 .text-shot {
