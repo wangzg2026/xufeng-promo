@@ -2,10 +2,17 @@
 .gitignore
 .dockerignore
 Dockerfile
-BRIEF.md
-BRIEF-EXPLAINER.md
+# 内部任务书都不发布（含禁用词名单、上游返回码、验收口径）。用通配，
+# 免得下一份 BRIEF 以同样方式漏出去（BRIEF-MANUAL.md 曾被漏掉）。
+BRIEF*.md
 check.py
 README.md
+# facts.json 只是 check.py 的事实源，没有任何页面读它；里面有页面禁用词名单和
+# 通道实现，打进镜像等于把内部口径公开挂在 /facts.json 上。
+facts.json
+# pricing.json 同理：没有任何页面在运行时读它，只有 check.py 读。
+pricing.json
+.DS_Store
 __pycache__
 .omc
 .playwright-mcp

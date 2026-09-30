@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import html
 import json
 import re
 import sys
@@ -24,7 +26,110 @@ EXPLAINER_ASSETS = ("assets/explainer.css", "assets/explainer.js")
 FACTS_FILE = "facts.json"
 EXPLAINER_PAGE_FORBIDDEN_TERMS = ("RPA", "乐企")
 MANUAL_PAGE_FORBIDDEN_TERMS = ("RPA", "乐企", "试用期")
-MANUAL_ERROR_CODES = ("8047", "3001", "8011")
+# 商户手册里不得出现上游接口返回码。这几串数字对商户没有任何可操作含义，只会被
+# 照着念给客服；码本身留在服务端日志、数据库和运营卡片里，排障不受影响。
+# 2026-09-11 反转：此前这三个码是「必须存在」，导致任何去技术码的改动都会被自家
+# 验收脚本挡回来。
+MANUAL_FORBIDDEN_ERROR_CODES = ("8047", "3001", "8011")
+# 手册必须给出人工兜底入口：注册页的工单。没有在线客服，只有工单系统。
+MANUAL_TICKET_MARKERS = ("提交工单",)
+# 全站不得出现「在线客服」：人工处理后在注册页回复，不是即时对话，这么写会让商户等回复。
+SITE_FORBIDDEN_SUPPORT_TERMS = ("在线客服",)
+# 宣传站对外一律称「开票平台」，正文不出现上游厂商名。注册页的品牌名是另一回事
+# （那是待定的业务决定），这条只管宣传站这几页。
+SITE_FORBIDDEN_VENDOR_TERMS = ("票通",)
+# 例外只有这两个正式名称：对外平台名，以及商户在登录页上看到的标题原文。
+SITE_ALLOWED_VENDOR_NAMES = ("旭峰微票通开票平台", "票通电子发票服务平台")
+
+
+# 含「票通」但属于普通中文的固定用语，先整体换掉再数厂商名。只列确认过的词：
+# 不能笼统豁免「前一个字是发/开」——「请转发票通平台公告」的「发」来自「转发」，
+# 那里的「票通」就是厂商名；也不能只看后一个字——那样「旭峰微票通过开票平台」这种
+# 写错的名称会被放过（Codex 两轮复核复现）。
+VENDOR_ORDINARY_PHRASES = (
+    "发票通常",
+    "发票通用",
+    "发票通行",
+    "发票通知",
+    "发票通过",
+    "发票通道",
+    "开票通常",
+    "开票通知",
+    "开票通过",
+    "开票通道",
+)
+# 守卫自检用例：(文案, 应计入的厂商名次数)。每次运行都跑，规则改坏了立刻知道。
+VENDOR_GUARD_CASES = (
+    ("旭峰微票通开票平台", 0),
+    ("票通电子发票服务平台", 0),
+    ("发票通常三分钟到账", 0),
+    ("电子发票通用指南", 0),
+    ("发票通行规则", 0),
+    ("开票通道正常", 0),
+    ("旭峰微票通过开票平台", 1),
+    ("票通知电子发票服务平台", 1),
+    ("票通道歉", 1),
+    ("票通平台", 1),
+    ("请转发票通平台公告", 1),
+)
+
+
+def without_allowed_vendor_names(source: str) -> str:
+    """把两个正式名称换成占位符再数厂商名，其余任何「票通」照样拦。
+
+    换成占位符而不是删掉：删掉会让前后文字拼接出新的裸「票通」，或把真违规藏进拼接里。
+    """
+    for name in SITE_ALLOWED_VENDOR_NAMES:
+        source = source.replace(name, "\u2063")
+    return source
+
+
+def count_vendor_mentions(source: str) -> int:
+    text = without_allowed_vendor_names(source)
+    for phrase in VENDOR_ORDINARY_PHRASES:
+        text = text.replace(phrase, "\u2063")
+    return text.count("票通")
+
+
+class VisibleTextParser(HTMLParser):
+    """浏览器里真正显示出来的文字：跳过注释与 script/style，实体自动解码。
+
+    不用正则去标签：注释里带「>」时正则会提前截断，留下的碎字把禁词隔开从而漏放；
+    而 script/style/注释里的内容又会被拼进来造成误报（Codex 第二轮复核复现）。
+    行内片段直接相连不加空格，「在线<strong>客服</strong>」才能还原成「在线客服」。
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+        self._skip_depth = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in {"script", "style"}:
+            self._skip_depth += 1
+            return
+        # 这几个属性商户同样看得见：悬停提示、图片替代文字、输入框占位、读屏文字。
+        # 单独成段（前后加换行），不和相邻正文拼接。
+        for name, value in attrs:
+            if value and name in {"title", "alt", "placeholder", "aria-label"}:
+                self.parts.append(f"\n{value}\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in {"script", "style"} and self._skip_depth:
+            self._skip_depth -= 1
+
+    def handle_data(self, data: str) -> None:
+        if not self._skip_depth:
+            self.parts.append(data)
+
+
+def visible_text(source: str) -> str:
+    parser = VisibleTextParser()
+    parser.feed(source)
+    parser.close()
+    return "".join(parser.parts)
+
+MANUAL_PDF_MIN_BYTES = 400_000
 MANUAL_DURATION_RANGES = ("1~5 分钟", "5~10 分钟")
 MANUAL_SOURCE_ATTRIBUTION = "美菜官方手册 v1.1 整理"
 REQUIRED_FILES = (
@@ -346,6 +451,32 @@ def check_copy(
         for term in FORBIDDEN_TERMS:
             if term in source:
                 problems.append(f"{name} contains forbidden term {term!r}")
+    # 厂商名单独扫全部对外页面（含手册与留言页），而不只是 HTML_FILES 那两页。
+    for wording, expected in VENDOR_GUARD_CASES:
+        if count_vendor_mentions(wording) != expected:
+            problems.append(
+                f"vendor-name guard self-test failed on {wording!r}: "
+                f"counted {count_vendor_mentions(wording)}, expected {expected}"
+            )
+    # 海报也要扫：它会导出成 PNG 脱离仓库流传，写错了追不回来。
+    for name in (*NAV_PAGE_FILES, POSTER_FILE):
+        source = sources.get(name, "") or (ROOT / name).read_text(encoding="utf-8")
+        for term in SITE_FORBIDDEN_VENDOR_TERMS:
+            occurrences = count_vendor_mentions(source)
+            if occurrences:
+                problems.append(
+                    f"{name} names the upstream vendor {term!r} {occurrences} time(s); "
+                    f"say 开票平台 instead"
+                )
+        for term in SITE_FORBIDDEN_SUPPORT_TERMS:
+            # 查商户实际看得到的：正文（防行内标签、实体绕过）与 title/alt/placeholder/
+            # aria-label 属性。注释、script、style 里的开发说明不算对客文案，不查。
+            occurrences = visible_text(source).count(term)
+            if occurrences:
+                problems.append(
+                    f"{name} says {term!r} {occurrences} time(s); there is no live support, "
+                    f"only the ticket on the register page (say 提交工单)"
+                )
         if re.search(r"15\s*天\s*退\s*款", source):
             problems.append(f"{name} contains an unsupported 15-day refund promise")
         if "\u65e0\u7406\u7531\u9000\u6b3e" in source:
@@ -662,6 +793,22 @@ def load_explainer_facts(checks: Checks) -> dict[str, object]:
         return {}
 
     problems: list[str] = []
+    # facts.json 只服务 check.py，不进镜像：里面有页面禁用词名单和通道实现，
+    # 曾被 Dockerfile 的 COPY . 一起发布成公开的 /facts.json。.dockerignore 少
+    # 掉这一行就会悄悄漏回去，所以在这里盯住。
+    dockerignore = ROOT / ".dockerignore"
+    ignored = (
+        dockerignore.read_text(encoding="utf-8").splitlines()
+        if dockerignore.is_file()
+        else []
+    )
+    if FACTS_FILE not in {
+        line.strip() for line in ignored if not line.lstrip().startswith("#")
+    }:
+        problems.append(
+            f".dockerignore must exclude {FACTS_FILE} so it is not published"
+        )
+
     object_fields = {
         "risk_auth": {
             "name": str,
@@ -793,7 +940,7 @@ def load_explainer_facts(checks: Checks) -> dict[str, object]:
     checks.record(
         "Explainer — fact source",
         problems,
-        "facts.json parses; authentication, account-mode terminology, reserved channels, flow, knowledge, and compliance fields are valid",
+        "facts.json parses and stays out of the published image; authentication, account-mode terminology, reserved channels, flow, knowledge, and compliance fields are valid",
     )
     return facts if not problems else {}
 
@@ -1156,16 +1303,55 @@ def check_manual(checks: Checks) -> None:
         manual_parser.close()
         manual_text = manual_parser.text
 
-        for term in MANUAL_PAGE_FORBIDDEN_TERMS:
-            occurrence_count = manual_source.count(term)
+        for term in (*MANUAL_PAGE_FORBIDDEN_TERMS, *SITE_FORBIDDEN_VENDOR_TERMS):
+            occurrence_count = (
+                count_vendor_mentions(manual_source)
+                if term in SITE_FORBIDDEN_VENDOR_TERMS
+                else manual_source.count(term)
+            )
             if occurrence_count:
                 problems.append(
                     f"{MANUAL_FILE} contains forbidden term {term!r} "
                     f"{occurrence_count} time(s); expected 0"
                 )
-        for code in MANUAL_ERROR_CODES:
-            if code not in manual_text:
-                problems.append(f"{MANUAL_FILE} lacks error code {code}")
+        for code in MANUAL_FORBIDDEN_ERROR_CODES:
+            # 扫原始源码而不是解析后的可见文本，和紧邻的禁用词守卫对齐：
+            # 码写进 title 属性（浏览器原生 tooltip）或 href 查询串照样被商户看到。
+            occurrence_count = manual_source.count(code)
+            if occurrence_count:
+                problems.append(
+                    f"{MANUAL_FILE} exposes upstream error code {code} "
+                    f"{occurrence_count} time(s); expected 0 — describe the problem "
+                    f"in plain Chinese instead"
+                )
+        for marker in MANUAL_TICKET_MARKERS:
+            if marker not in manual_text:
+                problems.append(
+                    f"{MANUAL_FILE} lacks the support-ticket entry marker {marker!r}"
+                )
+        # 「显著位置」要断结构，不能只断词：顶部常驻板块 + 目录里的跳转项都必须在，
+        # 且板块要排在第一个正文章节（manual-chapter）之前，否则等于又退回
+        # 「联系方式埋在最后一屏」。板块本身在 hero 里，所以不能拿 <section> 当界标。
+        ticket_anchor = manual_source.find('id="ticket"')
+        if ticket_anchor < 0:
+            problems.append(
+                f"{MANUAL_FILE} lacks the prominent support-ticket block (id=\"ticket\")"
+            )
+        elif 0 <= manual_source.find('class="manual-chapter"') < ticket_anchor:
+            problems.append(
+                f"{MANUAL_FILE} support-ticket block is below the first chapter; "
+                f"it must stay near the top"
+            )
+        if 'href="#ticket"' not in manual_source:
+            problems.append(f"{MANUAL_FILE} table of contents lacks the #ticket entry")
+        if ticket_anchor >= 0:
+            # 只断言锚点在不行：板块里的文字和去注册页的唯一链接被删光，锚点还在也能过。
+            ticket_block = manual_source[ticket_anchor : manual_source.find("</div>", ticket_anchor)]
+            for required in ("提交工单", 'href="https://fapiao.chinavtax.com/register"'):
+                if required not in ticket_block:
+                    problems.append(
+                        f"{MANUAL_FILE} support-ticket block lacks {required!r}"
+                    )
         for duration in MANUAL_DURATION_RANGES:
             if duration not in manual_text:
                 problems.append(
@@ -1180,10 +1366,47 @@ def check_manual(checks: Checks) -> None:
             problems.append(f"{MANUAL_FILE} lacks the assets/manual.pdf download link")
 
     pdf_path = ROOT / "assets" / "manual.pdf"
+    stamp_path = ROOT / "assets" / "manual.pdf.source"
     if not pdf_path.is_file():
         problems.append("assets/manual.pdf is missing; regenerate it after manual content changes (see README)")
-    elif pdf_path.stat().st_size < 20_000:
-        problems.append(f"assets/manual.pdf looks truncated ({pdf_path.stat().st_size} bytes)")
+    else:
+        size = pdf_path.stat().st_size
+        # 20_000 这个旧阈值拦不住任何已知故障：一次渲染失败的产物是 68914 字节，
+        # 正常导出是 740K~800K。按真实体量设下限，坏导出才会被挡下。
+        if size < MANUAL_PDF_MIN_BYTES:
+            problems.append(
+                f"assets/manual.pdf looks truncated ({size} bytes < {MANUAL_PDF_MIN_BYTES}); "
+                f"re-export it and check the text layer (see README)"
+            )
+        # PDF 是导出件，check.py 读不了它的文本层（纯 stdlib）。改用指纹拦住唯一的
+        # 真实故障路径：manual.html 改了却忘记重新导出，商户下载到的仍是旧手册。
+        # 两个摘要都要记：只记 HTML 的话，把旧 PDF 原样拷回来（HTML 没动）照样能过，
+        # 而那份旧 PDF 里印着 8047/3001/8011。
+        expected = {
+            "manual_html": hashlib.sha256((ROOT / MANUAL_FILE).read_bytes()).hexdigest(),
+            "manual_pdf": hashlib.sha256(pdf_path.read_bytes()).hexdigest(),
+        }
+        if not stamp_path.is_file():
+            problems.append(
+                "assets/manual.pdf.source is missing; re-export the PDF and record the "
+                "digests (see README)"
+            )
+        else:
+            try:
+                recorded = json.loads(stamp_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                recorded = {}
+            if recorded.get("manual_html") != expected["manual_html"]:
+                problems.append(
+                    "assets/manual.pdf is stale: manual.html changed since the last export. "
+                    "Re-export the PDF and refresh assets/manual.pdf.source (see README)"
+                )
+            elif recorded.get("manual_pdf") != expected["manual_pdf"]:
+                problems.append(
+                    "assets/manual.pdf is not the file that was exported from the current "
+                    "manual.html (digest mismatch). Re-export it and refresh "
+                    "assets/manual.pdf.source (see README)"
+                )
 
     style_source = (ROOT / "assets" / "style.css").read_text(encoding="utf-8")
     if "@media print" not in style_source:
@@ -1192,7 +1415,7 @@ def check_manual(checks: Checks) -> None:
     checks.record(
         "manual",
         problems,
-        "four-page header navigation is cross-linked; forbidden terms occur 0 times; error codes, duration ranges, source attribution, PDF download link/file, and print styles are present",
+        "four-page header navigation is cross-linked; forbidden terms and upstream error codes occur 0 times; support-ticket entry, duration ranges, source attribution, PDF download link/file, and print styles are present",
     )
 
 

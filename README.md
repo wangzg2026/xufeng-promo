@@ -31,4 +31,18 @@ python3 -m http.server 8900
   --print-to-pdf=assets/manual.pdf "http://127.0.0.1:8905/manual.html"
 ```
 
-已知限制：PDF 文本层部分汉字会被 Chrome 映射为形近的部首字符，仅影响复制粘贴，不影响阅读与打印；错误码、网址等 ASCII 内容不受影响。
+导出后**必须**刷新指纹文件，否则 check.py 会判 PDF 陈旧：
+
+```bash
+python3 - <<'EOF'
+import hashlib, json, pathlib
+pathlib.Path("assets/manual.pdf.source").write_text(json.dumps({
+    "manual_html": hashlib.sha256(pathlib.Path("manual.html").read_bytes()).hexdigest(),
+    "manual_pdf": hashlib.sha256(pathlib.Path("assets/manual.pdf").read_bytes()).hexdigest(),
+}, indent=2) + "\n")
+EOF
+```
+
+check.py 读不了 PDF 文本层（纯 stdlib），靠这两个摘要拦住两种真实故障：改了 HTML 忘记
+重新导出、以及把旧 PDF 拷回来顶替。再用 `pdftotext assets/manual.pdf -` 人工抽一遍确认：
+不得出现上游接口返回码（8047/3001/8011 等），且能搜到「提交工单」入口。
