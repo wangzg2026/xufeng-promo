@@ -72,6 +72,56 @@ VENDOR_GUARD_CASES = (
     ("票通平台", 1),
     ("请转发票通平台公告", 1),
 )
+# 业主核实：扫脸间隔由企业设置，系统评估各企业上限，不能写成统一固定周期。
+AUTH_CYCLE_ALLOWED_PHRASES = ("0 天到 183 天", "最长 183 天", "0～183")
+AUTH_CYCLE_FORBIDDEN_PHRASES = (
+    "0.5 小时到 24 小时之间选",
+    "不是固定的 183 天",
+    "183 天一个周期",
+    "183 天一周期",
+    "0.5～24",
+    "最长的 24 小时",
+    "最长 24 小时",
+)
+AUTH_CYCLE_GUARD_CASES = (
+    ("183 天一个周期", 1),
+    ("183 天一周期", 1),
+    ("<strong>183</strong>", 1),
+    ("不是固定的 183 天", 1),
+    ("不是固定的 183 天；183 天一个周期", 2),
+    ("1<strong>83</strong> 天一个周期", 1),
+    ("1<!-- x > 0 -->83 天一个周期", 1),
+    ("&#49;&#56;&#51; 天一个周期", 1),
+    ("不是固定的 <strong>183</strong> 天", 1),
+    ('<img alt="183 天一个周期">', 1),
+    ('<div aria-label="183 天一个周期"></div>', 1),
+    ('<div title="183 天一个周期"></div>', 1),
+    ('<meta name="description" content="183 天一个周期">', 1),
+    ('<div data-cycle="&#49;&#56;&#51; 天一个周期"></div>', 1),
+    ('<div title="不是固定的 183 天">不是固定的 183 天</div>', 2),
+    ('不是固定的 <strong title="183 天一个周期">183</strong> 天', 2),
+    ('<div title="不是固定的 ">183 天</div>', 1),
+    ("<!-- 183 天一个周期 --><script>183</script><style>183</style>", 0),
+    ("0 天到 183 天", 0),
+    ("最长 183 天", 0),
+    ("0～183", 0),
+    ("0 天到 <b>183</b> 天，最长 183 天", 0),
+    ("0～&#49;&#56;&#51;", 0),
+    ('<div title="最长 183 天">0～183</div>', 0),
+    ('<div title="最长 ">183 天</div>', 1),
+    ("10 天到 183 天", 1),
+    ("10～183", 1),
+    ("最长 183 天一个周期", 1),
+    ("0.5 小时到 24 小时之间选", 1),
+    ("0.5 小时到<!-- x > 0 --> 24 小时之间选", 1),
+    ('<div data-cycle="0.5 小时到 24 小时之间选"></div>', 1),
+    ("<strong>0.5～24</strong>", 1),
+    ("最长的 24 小时", 1),
+    ("最长 24 小时", 1),
+    ("24 小时一次，仅开票当天需要", 0),
+    ("也有的按小时计算（如 24 小时）", 0),
+    ("<!-- 0.5～24 --><script>0.5～24</script><style>0.5～24</style>", 0),
+)
 
 
 def without_allowed_vendor_names(source: str) -> str:
@@ -129,6 +179,36 @@ def visible_text(source: str) -> str:
     parser.close()
     return "".join(parser.parts)
 
+
+class AuthCycleParser(VisibleTextParser):
+    """沿用可见文本解析，但把所有属性单独检查，避免属性与正文互相拼接或遮挡。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.attribute_values: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        super().handle_starttag(tag, [])
+        self.attribute_values.extend(value for _, value in attrs if value)
+
+
+def count_unsupported_auth_cycles(source: str) -> int:
+    parser = AuthCycleParser()
+    parser.feed(source)
+    parser.close()
+    count = 0
+    allowed = "|".join(re.escape(re.sub(r"\s+", "", phrase)) for phrase in AUTH_CYCLE_ALLOWED_PHRASES)
+    for text in ("".join(parser.parts), *parser.attribute_values):
+        text = re.sub(r"\s+", "", text)
+        for phrase in AUTH_CYCLE_FORBIDDEN_PHRASES:
+            phrase = re.sub(r"\s+", "", phrase)
+            count += text.count(phrase)
+            text = text.replace(phrase, "\u2063")
+        text = re.sub(rf"(?<![\d.])(?:{allowed})(?!\d)", "\u2063", text)
+        count += text.count("183")
+    return count
+
+
 MANUAL_PDF_MIN_BYTES = 400_000
 MANUAL_DURATION_RANGES = ("1~5 分钟", "5~10 分钟")
 MANUAL_SOURCE_ATTRIBUTION = "美菜官方手册 v1.1 整理"
@@ -175,6 +255,105 @@ FAQ_QUESTIONS = (
 def normalized(text: str) -> str:
     """Collapse whitespace so checks are not coupled to source formatting."""
     return re.sub(r"\s+", " ", text).strip()
+
+
+# 2027 年 1、2 月是缴费宽限期，不能再把 1 月 1 日写成停服或必须付费的起点。
+# 先解析可见文本再去空白，防止行内标签、注释、实体和排版换行绕过旧口径闸。
+OLD_PAYMENT_PATTERNS = (
+    r"2027年1月1日起[，,：:]?继续使用(?:才需付费|按年付费)",
+    r"继续使用按899元/年/税号付费",
+    r"2027年起[，,：:]?(?:首年)?899",
+    r"2027[+＋]2028",
+    r"核对信息并完成付款",
+)
+PAYMENT_GUARD_CASES = (
+    ("2027 年 1 月 1 日起继续使用才需付费", 1),
+    ("继续使用按 899 元/年/税号 付费", 1),
+    ("2027 年起 899", 1),
+    ("2027 年起：首年 899 元", 1),
+    ("2027+2028 一次付清", 1),
+    ("2027＋2028", 1),
+    ("2027 年起 <b>899</b> 元", 1),
+    ("2027 年起<!-- x > 0 -->899 元", 1),
+    ("2027&#43;2028", 1),
+    ("2027 年 1 月 1 日起\n继续使用按年付费", 1),
+    ('<img alt="2027 年起 899 元">', 1),
+    ("<!-- 2027+2028 --><script>2027 年起 899</script><style>2027+2028</style>", 0),
+    ("2027 年 1 月 1 日起开放缴费，3 月 1 日前缴费享优惠价", 0),
+    ("2027 年 3 月 1 日起按原价 899 元/年/税号", 0),
+    ("2027 年 6 月 30 日前续订第二年仅 799 元/年/税号", 0),
+    ("两年套餐（一次付清两年）", 0),
+    ('<meta name="description" content="2027 年起 899 元">', 1),
+    ('<meta property="og:description" content="2027&#43;2028 一次付清">', 1),
+    ('<meta name="description" content="上传营业执照，核对信息并完成付款。">', 1),
+    ('<meta name="description" content="2026 年内注册开通免费，按步骤完成注册与开通；2027 年 3 月 1 日前需缴费，避免停止服务。">', 0),
+    ('<!-- <meta content="2027 年起 899 元"> --><script>2027 年起 899</script>', 0),
+    ('<meta content="2027 年起"><meta content="899 元">', 0),
+    ("届时页面会引导完成付款。", 0),
+)
+
+
+def count_old_payment_copy(source: str) -> int:
+    # 搜索摘要和分享卡片也会展示 meta 文案；逐项扫描，避免与正文或其他 meta 拼接。
+    parser = SiteHTMLParser()
+    parser.feed(source)
+    parser.close()
+    texts = (visible_text(source), *(meta.get("content", "") for meta in parser.metas))
+    return sum(
+        len(re.findall(pattern, re.sub(r"\s+", "", text)))
+        for text in texts for pattern in OLD_PAYMENT_PATTERNS
+    )
+
+
+def check_payment_copy(checks: Checks) -> None:
+    problems: list[str] = []
+    for source, expected in PAYMENT_GUARD_CASES:
+        actual = count_old_payment_copy(source)
+        if actual != expected:
+            problems.append(f"payment guard self-test failed on {source!r}: {actual}, expected {expected}")
+    pages = sorted(ROOT.glob("*.html"))
+    for path in pages:
+        count = count_old_payment_copy(path.read_text(encoding="utf-8"))
+        if count:
+            problems.append(f"{path.name} contains obsolete payment wording {count} time(s)")
+    checks.record(
+        "Payment wording — public pages",
+        problems,
+        f"{len(PAYMENT_GUARD_CASES)} guard self-tests passed; all {len(pages)} HTML pages are free of obsolete payment wording (visible text and meta content)",
+    )
+
+
+def bound_texts(source: str, attribute: str, value: str | None = None) -> list[str]:
+    """逐处取静态文案绑定，不能让别处的正确副本掩盖被改错的一处。"""
+    binding = re.escape(attribute)
+    if value is not None:
+        binding += rf'=["\']{re.escape(value)}["\']'
+    pattern = rf'<([a-z][a-z0-9]*)\b[^>]*\s{binding}(?=[\s>])[^>]*>(.*?)</\1\s*>'
+    return [visible_text(match.group(2)).strip() for match in re.finditer(pattern, source, re.I | re.S)]
+
+
+def chinese_date(value: object) -> str:
+    year, month, day = str(value).split("-")
+    return f"{year} 年 {int(month)} 月 {int(day)} 日"
+
+
+# 最稳妥做法必须逐字绑定：别处的正确副本不能掩盖删字或标点错误。
+BEST_PRACTICE_BINDING_CASES = (
+    ('<dd data-fact-key="risk_auth.best_practice">扫码完成认证。</dd>', True),
+    ('<dd data-fact-key="risk_auth.best_practice">扫码完认证。</dd>', False),
+    ('<dd data-fact-key="risk_auth.best_practice">扫码完成认证.</dd>', False),
+    ('<dd>扫码完成认证。</dd>', False),
+    ('<dd data-fact-key="risk_auth.method">扫码完成认证。</dd>', False),
+    ('<p>扫码完成认证。</p><dd data-fact-key="risk_auth.best_practice">扫码完认证。</dd>', False),
+    ('<dd data-fact-key="risk_auth.best_practice">扫码完成认证。</dd>'
+     '<dd data-fact-key="risk_auth.best_practice">扫码完认证。</dd>', False),
+    ('<dd data-fact-key="risk_auth.best_practice">扫码<strong>完成</strong>认证。</dd>', True),
+)
+
+
+def fact_binding_matches(source: str, key: str, value: object) -> bool:
+    values = bound_texts(source, "data-fact-key", key)
+    return bool(values) and all(text == str(value) for text in values)
 
 
 def is_external_reference(value: str) -> bool:
@@ -305,6 +484,12 @@ def load_sources(checks: Checks) -> tuple[dict[str, object], dict[str, str], dic
         "two_year_price": int,
         "promo_slogan": str,
         "promo_policy": str,
+        "payment_notice": str,
+        "payment_deadline": str,
+        "early_first_year_price": int,
+        "early_two_year_price": int,
+        "early_valid_until": str,
+        "early_two_year_valid_until": str,
         "refund_slogan": str,
         "refund_policy": str,
         "refund_channel": str,
@@ -314,7 +499,7 @@ def load_sources(checks: Checks) -> tuple[dict[str, object], dict[str, str], dic
     for key, expected_type in expected_types.items():
         if key not in pricing:
             pricing_problems.append(f"missing key {key}")
-        elif not isinstance(pricing[key], expected_type):
+        elif type(pricing[key]) is not expected_type:
             pricing_problems.append(f"{key} must be {expected_type.__name__}")
     checks.record(
         "Pricing source",
@@ -349,6 +534,12 @@ def check_pricing(
         "unit",
         "promo_slogan",
         "promo_policy",
+        "payment_notice",
+        "payment_deadline",
+        "early_first_year_price",
+        "early_two_year_price",
+        "early_valid_until",
+        "early_two_year_valid_until",
         "refund_slogan",
         "refund_policy",
         "refund_channel",
@@ -363,13 +554,16 @@ def check_pricing(
     unit = str(pricing["unit"])
     promo_slogan = str(pricing["promo_slogan"])
     promo_policy = str(pricing["promo_policy"])
+    payment_notice = str(pricing["payment_notice"])
+    early_first = int(pricing["early_first_year_price"])
+    early_two = int(pricing["early_two_year_price"])
     two_year = str(pricing.get("two_year_price", ""))
     renewal_deadline = str(pricing.get("renewal_deadline", ""))
     refund_slogan = str(pricing["refund_slogan"])
     refund = str(pricing["refund_policy"])
     refund_channel = str(pricing["refund_channel"])
     entity = str(pricing["service_entity"])
-    allowed_prices = {first, renewal, int(pricing.get("two_year_price", 0))}
+    allowed_prices = {first, renewal, int(pricing.get("two_year_price", 0)), early_first, early_two}
     problems: list[str] = []
 
     for name in HTML_FILES:
@@ -383,18 +577,27 @@ def check_pricing(
         for value, key in (
             (first, "first_year_price"),
             (renewal, "renewal_price"),
+            (early_first, "early_first_year_price"),
+            (early_two, "early_two_year_price"),
         ):
-            expected = re.compile(
-                rf'data-price-key=["\']{re.escape(key)}["\'][^>]*>\s*{value}\s*<',
-                re.IGNORECASE,
-            )
-            if not expected.search(source):
+            values = bound_texts(source, "data-price-key", key)
+            if not values or any(text != str(value) for text in values):
                 problems.append(f"{name} lacks verified {key}={value}")
+            amount_unit = "元/税号" if key == "early_two_year_price" else unit
             price_with_unit = re.compile(
-                rf"(?<!\d){value}(?!\d)\s+{re.escape(unit)}"
+                rf"(?<!\d){value}(?!\d)\s+{re.escape(amount_unit)}"
             )
             if not price_with_unit.search(text):
-                problems.append(f"{name} lacks '{value} {unit}'")
+                problems.append(f"{name} lacks '{value} {amount_unit}'")
+
+        for attribute, expected_text in (
+            ("data-promo-policy", promo_policy),
+            ("data-payment-notice", payment_notice),
+            ("data-two-year-price", two_year),
+        ):
+            values = bound_texts(source, attribute)
+            if not values or any(value != expected_text for value in values):
+                problems.append(f"{name} {attribute} binding differs from pricing.json")
 
         for match in re.finditer(r"(?<!\d)(\d[\d,]*)\s*元", text):
             amount = int(match.group(1).replace(",", ""))
@@ -407,12 +610,17 @@ def check_pricing(
                 problems.append(f"{name} has unknown ¥ amount {amount}")
 
         # 每档价格绑定自己的计价单位：年费按年，两年套餐按税号一次性。
-        unit_by_price = {first: unit, renewal: unit}
+        # 全文逐字核验过的政策含「原价 899 元」；价格卡优惠短句也按指定原文豁免。
+        # 其余金额仍要求完整计价单位，避免把两年价误写成每年价。
+        unit_text = text.replace(promo_policy, "")
+        for amount in (early_first, early_two):
+            unit_text = re.sub(rf"3 月 1 日前缴费 {amount} 元(?!/)", "", unit_text)
+        unit_by_price = {first: unit, renewal: unit, early_first: unit, early_two: "元/税号"}
         if pricing.get("two_year_price"):
             unit_by_price[int(pricing["two_year_price"])] = "元/税号"
         for amount, amount_unit in unit_by_price.items():
-            for match in re.finditer(rf"(?<!\d){amount}(?!\d)", text):
-                context = text[match.start() : match.end() + len(amount_unit) + 2]
+            for match in re.finditer(rf"(?<!\d){amount}(?!\d)", unit_text):
+                context = unit_text[match.start() : match.end() + len(amount_unit) + 2]
                 if not re.match(rf"{amount}\s+{re.escape(amount_unit)}", context):
                     problems.append(
                         f"{name} uses {amount} outside the exact '{amount_unit}' price context"
@@ -426,6 +634,11 @@ def check_pricing(
             problems.append(f"{name} lacks the renewal deadline {renewal_deadline}")
         if promo_policy not in text:
             problems.append(f"{name} promo policy differs from pricing.json")
+        if payment_notice not in text:
+            problems.append(f"{name} payment notice differs from pricing.json")
+        for key in ("payment_deadline", "early_valid_until", "early_two_year_valid_until"):
+            if chinese_date(pricing[key]) not in promo_policy:
+                problems.append(f"promo_policy lacks {key} from pricing.json")
         if refund_slogan not in text:
             problems.append(f"{name} refund slogan differs from pricing.json")
         if refund not in text:
@@ -435,10 +648,20 @@ def check_pricing(
         if entity not in text:
             problems.append(f"{name} service entity differs from pricing.json")
 
+    manual_text = visible_text((ROOT / MANUAL_FILE).read_text(encoding="utf-8"))
+    manual_payment = (
+        f"{payment_notice}免费期内注册开通全程免费，不经过收银台、不收任何费用；"
+        "2027 年 1 月 1 日至 2 月 28 日服务照常，同时开放缴费。"
+        f"3 月 1 日前缴费，一年期 {early_first} 元/年/税号、两年套餐 {early_two} 元/税号；"
+        "3 月 1 日起按原价。美菜不额外收开票服务费，本服务不设自动扣费。"
+    )
+    if manual_payment not in manual_text:
+        problems.append(f"{MANUAL_FILE} payment FAQ differs from pricing.json")
+
     checks.record(
         "Pricing and legal facts",
         problems,
-        f"{first}/{renewal} {unit}, refund slogan/policy/channel, and service entity match pricing.json",
+        f"{first}/{renewal}/{two_year}, early prices {early_first}/{early_two}, all policy/notice bindings, manual payment FAQ, refund terms, and service entity match pricing.json",
     )
 
 
@@ -496,6 +719,30 @@ def check_copy(
         "Copy and FAQ",
         problems,
         "forbidden-term scan clean; all 10 fixed FAQs and tax-policy disclaimer present",
+    )
+
+
+def check_auth_cycles(checks: Checks) -> None:
+    problems: list[str] = []
+    for source, expected in AUTH_CYCLE_GUARD_CASES:
+        actual = count_unsupported_auth_cycles(source)
+        if actual != expected:
+            problems.append(
+                f"authentication-cycle guard self-test failed on {source!r}: "
+                f"counted {actual}, expected {expected}"
+            )
+    pages = sorted(ROOT.rglob("*.html"))
+    for path in pages:
+        occurrences = count_unsupported_auth_cycles(path.read_text(encoding="utf-8"))
+        if occurrences:
+            problems.append(
+                f"{path.relative_to(ROOT)} has {occurrences} obsolete/unsupported authentication wording occurrence(s)"
+            )
+    checks.record(
+        "Authentication cycle — public pages",
+        problems,
+        f"{len(AUTH_CYCLE_GUARD_CASES)} guard self-tests passed; all {len(pages)} HTML pages "
+        f"allow 183 only in {AUTH_CYCLE_ALLOWED_PHRASES!r}; obsolete wording absent (visible text and every attribute)",
     )
 
 
@@ -719,9 +966,41 @@ def check_message_form(checks: Checks) -> None:
     )
 
 
+def poster_payment_matches(source: str, pricing: dict) -> bool:
+    poster_payment = (
+        f'{chinese_date(pricing["payment_deadline"])}前缴费：一年 {pricing["early_first_year_price"]} 元'
+        f'（原价 {pricing["first_year_price"]}）、两年 {pricing["early_two_year_price"]} 元'
+        f'（原价 {pricing["two_year_price"]}），有效期统一到 {chinese_date(pricing["early_valid_until"])}'
+        f'（两年套餐到 {chinese_date(pricing["early_two_year_valid_until"])}）；'
+        "3 月 1 日起未缴费将停止服务。"
+    )
+    return poster_payment in visible_text(source)
+
+
 def check_dealer_poster(checks: Checks, pricing: dict) -> None:
     """经销商海报的事实一致性：金额、免费期截止日、服务主体都以 pricing.json 为准。"""
     problems: list[str] = []
+    # 固定样例独立于拼接规则：曾漏读两年有效期，旧错误通过、完整文案反而被拒。
+    sample_pricing = {
+        "payment_deadline": "2027-03-01", "early_first_year_price": 799,
+        "first_year_price": 899, "early_two_year_price": 1500, "two_year_price": 1600,
+        "early_valid_until": "2028-03-01", "early_two_year_valid_until": "2029-03-01",
+    }
+    sample = (
+        "2027 年 3 月 1 日前缴费：一年 <b>799 元</b>（原价 899）、两年 <b>1500 元</b>（原价 1600），"
+        "有效期统一到 2028 年 3 月 1 日（两年套餐到 2029 年 3 月 1 日）；3 月 1 日起未缴费将停止服务。"
+    )
+    validity_cases = (
+        (sample, True),
+        (sample.replace("2029", ""), False),
+        (sample.replace("（两年套餐到 2029 年 3 月 1 日）", ""), False),
+        (sample.replace("2029", "2028"), False),
+        (sample.replace("2029", "<!-- 2029 -->"), False),
+    )
+    for copy, expected in validity_cases:
+        actual = poster_payment_matches(copy, sample_pricing)
+        if actual != expected:
+            problems.append(f"poster validity self-test failed on {copy!r}: {actual}, expected {expected}")
     try:
         source = (ROOT / POSTER_FILE).read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
@@ -733,16 +1012,39 @@ def check_dealer_poster(checks: Checks, pricing: dict) -> None:
     parser.close()
     text = parser.text
 
+    required = {
+        "first_year_price", "two_year_price", "early_first_year_price",
+        "early_two_year_price", "payment_notice", "payment_deadline", "early_valid_until",
+        "early_two_year_valid_until",
+    }
+    if not required.issubset(pricing):
+        checks.record("dealer poster facts", ["pricing source is incomplete"], "")
+        return
+
     allowed_prices = {
         int(pricing["first_year_price"]),
         int(pricing["renewal_price"]),
         int(pricing.get("two_year_price", 0)),
+        int(pricing["early_first_year_price"]),
+        int(pricing["early_two_year_price"]),
     }
     for pattern in (r"(?<!\d)(\d[\d,]*)\s*元", r"¥\s*(\d[\d,]*)"):
         for match in re.finditer(pattern, text):
             amount = int(match.group(1).replace(",", ""))
             if amount not in allowed_prices:
                 problems.append(f"{POSTER_FILE} has unknown amount {amount}")
+
+    # 海报用两个 chip 承载 payment_notice；必须同时出现，且逐字核验。
+    notice_parts = str(pricing["payment_notice"]).removesuffix("。").split("；")
+    chips = [notice_parts[0].replace("截止到", "截止"), *notice_parts[1:]]
+    chip_texts = [
+        visible_text(body).strip()
+        for body in re.findall(r'<div class="deadline-chip">(.*?)</div>', source, re.S)
+    ]
+    if chip_texts != chips:
+        problems.append(f"{POSTER_FILE} payment notice chips differ from pricing.json")
+    if not poster_payment_matches(source, pricing):
+        problems.append(f"{POSTER_FILE} payment prices/deadline/validity differ from pricing.json")
 
     promo_end = str(pricing.get("promo_end", ""))
     if promo_end:
@@ -758,7 +1060,7 @@ def check_dealer_poster(checks: Checks, pricing: dict) -> None:
     checks.record(
         "dealer poster facts",
         problems,
-        "poster amounts, promo deadline, and service entity all match pricing.json",
+        f"{len(validity_cases)} validity self-tests passed; poster early/original prices, payment notice chips, deadlines, one/two-year validity, and service entity match pricing.json",
     )
 
 
@@ -813,7 +1115,10 @@ def load_explainer_facts(checks: Checks) -> dict[str, object]:
         "risk_auth": {
             "name": str,
             "cycle": str,
-            "cycle_days": int,
+            "interval_range": str,
+            "frequency_setting": str,
+            "risk_warning_note": str,
+            "best_practice": str,
             "where": str,
             "method": str,
             "note": str,
@@ -909,15 +1214,8 @@ def load_explainer_facts(checks: Checks) -> dict[str, object]:
                     )
 
     risk_auth = facts.get("risk_auth")
-    if isinstance(risk_auth, dict):
-        cycle = risk_auth.get("cycle")
-        cycle_days = risk_auth.get("cycle_days")
-        if (
-            isinstance(cycle, str)
-            and isinstance(cycle_days, int)
-            and f"{cycle_days} 天" not in cycle
-        ):
-            problems.append("risk_auth.cycle disagrees with risk_auth.cycle_days")
+    if isinstance(risk_auth, dict) and "cycle_days" in risk_auth:
+        problems.append("risk_auth.cycle_days is obsolete; use interval_range and frequency_setting")
 
     sms_auth = facts.get("sms_auth")
     if isinstance(sms_auth, dict):
@@ -995,6 +1293,12 @@ def check_explainer(
         explainer_read_problem = f"missing {EXPLAINER_FILE}"
 
     fact_problems: list[str] = []
+    for source, expected in BEST_PRACTICE_BINDING_CASES:
+        actual = fact_binding_matches(source, "risk_auth.best_practice", "扫码完成认证。")
+        if actual != expected:
+            fact_problems.append(
+                f"best-practice binding self-test failed on {source!r}: {actual}, expected {expected}"
+            )
     if not facts:
         fact_problems.append("facts.json is unavailable or incomplete")
     if explainer_read_problem:
@@ -1011,28 +1315,28 @@ def check_explainer(
         sms_auth = facts["sms_auth"]
         assert isinstance(risk_auth, dict)
         assert isinstance(sms_auth, dict)
-        cycle_days = int(risk_auth["cycle_days"])
         cycle_hours = int(sms_auth["cycle_hours"])
-        numeric_bindings = (
-            ("risk_auth.cycle_days", cycle_days),
+        fact_bindings = (
+            *((f"risk_auth.{key}", value) for key, value in risk_auth.items()),
             ("sms_auth.cycle_hours", cycle_hours),
         )
-        for fact_key, value in numeric_bindings:
-            pattern = re.compile(
-                rf'data-fact-key=["\']{re.escape(fact_key)}["\'][^>]*>'
-                rf"\s*{value}\s*<",
-                re.IGNORECASE,
-            )
-            if not pattern.search(explainer_source):
+        for fact_key, value in fact_bindings:
+            if not fact_binding_matches(explainer_source, fact_key, value):
                 fact_problems.append(
                     f"{EXPLAINER_FILE} does not bind {fact_key}={value}"
                 )
 
-        allowed_time_facts = {
-            (str(cycle_days), "天"),
-            (str(cycle_hours), "小时"),
-        }
-        for number, unit in re.findall(r"(?<!\d)(\d+)\s*(天|小时)", explainer_text):
+        time_pattern = r"(?<![\d.])(\d+(?:\.\d+)?)\s*(天|小时)"
+        allowed_time_facts = set(re.findall(time_pattern, " ".join(map(str, risk_auth.values()))))
+        allowed_time_facts.add((str(cycle_hours), "小时"))
+        range_markup = (
+            f'<strong data-fact-key="risk_auth.interval_range">{risk_auth["interval_range"]}</strong>'
+            "<span>天，企业可设置</span>"
+        )
+        if range_markup not in explainer_source:
+            fact_problems.append(f"{EXPLAINER_FILE} risk-auth range/day label differs from facts.json")
+        time_text = explainer_text
+        for number, unit in re.findall(r"(?<![\d.])(\d+(?:\.\d+)?)\s*(天|小时)", time_text):
             if (number, unit) not in allowed_time_facts:
                 fact_problems.append(
                     f"{EXPLAINER_FILE} has unsupported time fact {number} {unit}"
@@ -1051,7 +1355,33 @@ def check_explainer(
     checks.record(
         "Explainer — fact consistency",
         fact_problems,
-        "all page-approved facts.json copy is present; 183-day and 24-hour bindings match exactly; required account-mode terminology is present",
+        f"{len(BEST_PRACTICE_BINDING_CASES)} best-practice binding self-tests passed; all page-approved facts.json copy is present; risk-auth text/range and SMS-hour bindings match exactly; required account-mode terminology is present",
+    )
+
+    consistency_problems: list[str] = []
+    if not facts:
+        consistency_problems.append("facts.json is unavailable or incomplete")
+    else:
+        try:
+            manual_text = visible_text((ROOT / MANUAL_FILE).read_text(encoding="utf-8"))
+        except (OSError, UnicodeError) as exc:
+            consistency_problems.append(f"cannot read {MANUAL_FILE} ({exc})")
+        else:
+            risk_auth = facts["risk_auth"]
+            for key, value in (
+                ("cycle", str(risk_auth["cycle"])),
+                ("frequency_setting", str(risk_auth["frequency_setting"])),
+                ("risk_warning_note", str(risk_auth["risk_warning_note"])),
+                ("best_practice", str(risk_auth["best_practice"])),
+            ):
+                if not value or value not in manual_text:
+                    consistency_problems.append(
+                        f"{MANUAL_FILE} lacks exact risk_auth.{key} text {value!r}"
+                    )
+    checks.record(
+        "Authentication cycle — manual consistency",
+        consistency_problems,
+        "manual.html contains exact risk-auth cycle, best-practice, frequency-setting, and risk-warning text from facts.json",
     )
 
     term_problems: list[str] = []
@@ -1105,9 +1435,9 @@ def check_explainer(
                 r"(?:选择|切换)通道|通道(?:选择|切换)"
             ),
         }
-        visible_text = explainer_parser.text
+        explainer_text = explainer_parser.text
         for label, pattern in unsupported_tax_patterns.items():
-            if re.search(pattern, visible_text):
+            if re.search(pattern, explainer_text):
                 term_problems.append(
                     f"{EXPLAINER_FILE} contains {label} not supported by facts.json"
                 )
@@ -1224,6 +1554,13 @@ def check_explainer(
         motion_problems.append(
             f"{EXPLAINER_ASSETS[0]} uses 100vw, a common mobile overflow source"
         )
+
+    for selector, declaration in (
+        (r"\.fact-number", r"flex-wrap\s*:\s*wrap"),
+        (r"\.fact-number\s+strong", r"white-space\s*:\s*nowrap"),
+    ):
+        if not re.search(rf"{selector}\s*\{{[^}}]*{declaration}\s*;", explainer_css):
+            motion_problems.append(f"{EXPLAINER_ASSETS[0]} lacks single-line numbers with wrapping labels")
 
     if explainer_source:
         svg_count = len(re.findall(r"<svg\b", explainer_source, re.IGNORECASE))
@@ -1421,6 +1758,8 @@ def check_manual(checks: Checks) -> None:
 
 def main() -> int:
     checks = Checks()
+    check_auth_cycles(checks)
+    check_payment_copy(checks)
     pricing, sources, parsers = load_sources(checks)
     if pricing and len(sources) == len(HTML_FILES):
         check_pricing(checks, pricing, sources, parsers)

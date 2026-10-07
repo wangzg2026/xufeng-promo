@@ -563,6 +563,7 @@
 
 .fact-number {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
   margin-top: 4px;
@@ -570,6 +571,7 @@
 }
 
 .fact-number strong {
+  white-space: nowrap;
   font-size: clamp(54px, 17vw, 78px);
   line-height: 1;
   letter-spacing: -0.06em;

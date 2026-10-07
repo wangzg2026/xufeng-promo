@@ -86,24 +86,24 @@
     letter-spacing: 1px;
   }
   .deadline-chip {
-    margin-top: 28px;
+    margin-top: 12px;
     display: inline-block;
     background: var(--accent);
     color: #fff;
     font-size: 30px;
     font-weight: 600;
     letter-spacing: 2px;
-    padding: 16px 34px;
+    padding: 12px 34px;
     border-radius: 10px;
   }
 
   /* 中部利益卡 */
-  .benefits { padding: 40px 80px 0; display: flex; flex-direction: column; gap: 24px; }
+  .benefits { padding: 32px 80px 0; display: flex; flex-direction: column; gap: 12px; }
   .card {
     background: #fff;
     border: 1px solid var(--line);
     border-radius: 18px;
-    padding: 32px 44px;
+    padding: 20px 44px;
     display: flex;
     gap: 30px;
     align-items: flex-start;
@@ -117,6 +117,7 @@
   .card .icon svg { width: 40px; height: 40px; stroke: var(--accent); }
   .card h3 { font-size: var(--card-title-size); font-weight: 700; letter-spacing: 1px; }
   .card p { margin-top: 14px; font-size: var(--body-size); line-height: 1.55; color: var(--muted); }
+  .card p.payment-policy { font-size: var(--small-size); }
   .card p b { color: var(--ink); font-weight: 600; }
 
   /* 信任背书行 */
@@ -210,6 +211,7 @@
     <div class="headline">客户催发票时<br /><span class="free">别再忙着手填</span></div>
     <div class="promo-note">2026 年内注册，开票资质全年免费用</div>
     <div class="deadline-chip">免费期截止 2026 年 12 月 31 日</div>
+    <div class="deadline-chip">2027 年 3 月 1 日前需缴费，避免停止服务</div>
   </div>
 
   <div class="benefits">
@@ -219,7 +221,7 @@
       </div>
       <div>
         <h3>年内全程免费</h3>
-        <p>免费期内注册、开通到使用<b>不收任何费用</b>，服务可用至 2026 年 12 月 31 日。</p>
+        <p>免费期内注册、开通到使用<b>不收任何费用</b>；2027 年 1 月 1 日至 2 月 28 日服务照常，同时开放缴费。</p>
       </div>
     </div>
     <div class="card">
@@ -237,7 +239,7 @@
       </div>
       <div>
         <h3>政策透明可核</h3>
-        <p>2027 年起 <b>899 元/年/税号</b>；明年 6 月 30 日前续订次年仅 <b>799 元</b>，两年套餐 <b>1600 元</b>。</p>
+        <p class="payment-policy">2027 年 3 月 1 日前缴费：一年 <b>799 元</b>（原价 899）、两年 <b>1500 元</b>（原价 1600），有效期统一到 2028 年 3 月 1 日（两年套餐到 2029 年 3 月 1 日）；3 月 1 日起未缴费将停止服务。</p>
       </div>
     </div>
   </div>

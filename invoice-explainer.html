@@ -194,10 +194,9 @@
               </svg>
             </div>
             <div class="fact-number">
-              <strong data-fact-key="risk_auth.cycle_days">183</strong>
-              <span>天一周期</span>
+              <strong data-fact-key="risk_auth.interval_range">0～183</strong><span>天，企业可设置</span>
             </div>
-            <p class="fact-cycle" data-fact-key="risk_auth.cycle">183 天一个周期，必须做一次（强制）</p>
+            <p class="fact-cycle" data-fact-key="risk_auth.cycle">间隔不固定，由企业自己设置：可在 0 天到 183 天之间选，填 0 表示每开一张发票都要刷脸。最长能设多久因企业而异，税务系统会按企业的纳税信用、发票额度等情况评估：有的企业最长 183 天，有的最长 90 天，也有的按小时计算（如 24 小时），以电子税务局设置页面显示的为准</p>
             <dl class="fact-list">
               <div>
                 <dt>在哪里</dt>
@@ -206,6 +205,18 @@
               <div>
                 <dt>怎么做</dt>
                 <dd data-fact-key="risk_auth.method">用税务 App 扫页面二维码，手机上完成人脸识别</dd>
+              </div>
+              <div>
+                <dt>最稳妥的做法</dt>
+                <dd data-fact-key="risk_auth.best_practice">用数电账号登录电子税务局，手动开票时做一次刷脸认证：开票前电子税务局会自动弹出认证二维码，用税务 App 扫码完成即可。认证通过后，认证状态会保持企业设置的认证时长。</dd>
+              </div>
+              <div>
+                <dt>想少刷几次</dt>
+                <dd data-fact-key="risk_auth.frequency_setting">只有法定代表人或财务负责人能改，开票员、办税员改不了：用他们的身份登录电子税务局，依次点“我要办税”→“发票使用”→“蓝字发票开具”，在发票额度下方或“发票填开”旁边点“扫脸认证时长设置”（有的地区叫“身份认证频次设置”），在页面显示的最长时间以内选择；想少刷几次，就设成页面允许的最长时间。</dd>
+              </div>
+              <div>
+                <dt>风险提醒时</dt>
+                <dd data-fact-key="risk_auth.risk_warning_note">另外，开票时如果触发税务风险提醒，即使还没到设置的间隔，也可能要求重新刷脸，以开票平台提示为准。</dd>
               </div>
               <div>
                 <dt>不开票时</dt>
