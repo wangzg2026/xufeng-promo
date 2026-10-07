@@ -118,14 +118,66 @@
         <p class="manual-note">刷脸认证多久做一次：间隔不固定，由企业自己设置：可在 0 天到 183 天之间选，填 0 表示每开一张发票都要刷脸。最长能设多久因企业而异，税务系统会按企业的纳税信用、发票额度等情况评估：有的企业最长 183 天，有的最长 90 天，也有的按小时计算（如 24 小时），以电子税务局设置页面显示的为准。最稳妥的做法：用数电账号登录电子税务局，手动开票时做一次刷脸认证：开票前电子税务局会自动弹出认证二维码，用税务 App 扫码完成即可。认证通过后，认证状态会保持企业设置的认证时长。只有法定代表人或财务负责人能改，开票员、办税员改不了：用他们的身份登录电子税务局，依次点“我要办税”→“发票使用”→“蓝字发票开具”，在发票额度下方或“发票填开”旁边点“扫脸认证时长设置”（有的地区叫“身份认证频次设置”），在页面显示的最长时间以内选择；想少刷几次，就设成页面允许的最长时间。另外，开票时如果触发税务风险提醒，即使还没到设置的间隔，也可能要求重新刷脸，以开票平台提示为准。</p>
 
         <div class="manual-subsection">
-          <h3>首次必做：设置旭峰微票通开票平台的登录密码</h3>
-          <p>开票用的短信验证、风险认证（刷脸），以及美菜推送过来的开票记录，都在旭峰微票通开票平台上处理。它的登录页标题显示为“票通电子发票服务平台”，就是这个平台。</p>
-          <p><strong>登录账号是企业税号，不是手机号。</strong>第一次登录前，先自己设置密码：</p>
+          <h3 id="platform">开票失败时：到旭峰微票通开票平台补做认证（平时不用登录）</h3>
+          <p class="manual-note"><strong>平时不需要登录这个平台。</strong>只要你的数电账号在电子税务局的认证状态有效（按企业设置的刷脸间隔做过认证），美菜推送的发票就会正常开出，不会因为认证开票失败，也就不需要重置密码、登录、绑定、认证、重开发票这一整套操作。</p>
+          <p class="manual-note">开通后，我们会给你注册时填写的联系人手机号发一条开通短信，只发一次，用来告诉你开票平台的登录账号和第一次登录的方法，方便以后开票失败时补做认证，或者自己用这个平台开票。短信内容是：「【北京旭峰嘉晟科技有限公司】（你的企业名称）的开票服务已开通。请登录票通电子发票服务平台，账号是企业税号；首次登录请点“重置密码”，按提示用预留手机号接收验证码设置密码，登录后再按提示完成风险认证。操作指引见美菜卖家后台“发票管理-旭峰注册”页面。」收到这条短信不代表要马上登录：平时不用登录，开票失败时再按下面的步骤操作。</p>
+          <p>用得到它的情况有两种：</p>
+          <ul class="manual-list">
+            <li>美菜那边出现开票失败，原因是风险认证（刷脸）过期，或者数电账号还没在电子税务局完成认证：在这个平台补做认证，并把失败的发票重开。</li>
+            <li>你想用一个方便的开票平台自己开票。</li>
+          </ul>
+          <p>网址（请用电脑浏览器打开）：登录页 <a href="https://fpkj.vpiaotong.com/login" target="_blank" rel="noopener">https://fpkj.vpiaotong.com/login</a>；第一次使用先设置密码：<a href="https://fpkj.vpiaotong.com/resetpwd" target="_blank" rel="noopener">https://fpkj.vpiaotong.com/resetpwd</a>。登录页标题显示为“票通电子发票服务平台”，就是这个平台。<strong>登录账号是企业税号，不是手机号。</strong></p>
           <ol class="manual-steps">
-            <li>打开<a href="https://fpkj.vpiaotong.com/resetpwd" target="_blank" rel="noopener">重置密码页</a>（也可以在<a href="https://fpkj.vpiaotong.com/login" target="_blank" rel="noopener">登录页</a>点“重置密码&gt;&gt;”）。</li>
-            <li>填企业税号和图片验证码，点“获取手机号”，页面会显示这个账号的预留手机号。</li>
-            <li>用预留手机号接收短信验证码，填好后设置新密码。新密码 8~20 位，要同时带大写字母、小写字母和数字。</li>
-            <li>回到登录页，用企业税号和新密码登录。</li>
+            <li>打开登录页，点左下角“重置密码&gt;&gt;”。
+              <figure class="screenshot-frame">
+                <img src="assets/screenshots/platform-01-login.png" alt="登录页左下角的重置密码入口">
+                <figcaption>登录页左下角的“重置密码&gt;&gt;”</figcaption>
+              </figure>
+            </li>
+            <li>填企业税号和图片验证码，点“获取手机号”。
+              <figure class="screenshot-frame">
+                <img src="assets/screenshots/platform-02-reset-step1.png" alt="重置密码第一步：填写企业税号和图片验证码，获取手机号">
+                <figcaption>重置密码第一步</figcaption>
+              </figure>
+            </li>
+            <li>页面会显示这个账号的预留手机号。再填一次图片验证码，点“获取验证码”，把收到的短信验证码填进去，点“下一步”。
+              <figure class="screenshot-frame">
+                <img src="assets/screenshots/platform-03-reset-step2.png" alt="重置密码第二步：获取并填写短信验证码">
+                <figcaption>重置密码第二步</figcaption>
+              </figure>
+            </li>
+            <li>设置新密码（8~20 位，要同时带大写字母、小写字母和数字），完成后回到登录页。</li>
+            <li>用企业税号和新密码登录。
+              <figure class="screenshot-frame">
+                <img src="assets/screenshots/platform-04-login.png" alt="用企业税号和新密码登录开票平台">
+                <figcaption>用企业税号和新密码登录</figcaption>
+              </figure>
+            </li>
+            <li>左侧点“我的账户”→“数电账户管理”。
+              <figure class="screenshot-frame">
+                <img src="assets/screenshots/platform-05-account-menu.png" alt="左侧我的账户菜单中的数电账户管理入口">
+                <figcaption>“我的账户”→“数电账户管理”</figcaption>
+              </figure>
+            </li>
+            <li>点“新增绑定”，用和美菜上相同的数电账号绑定。美菜后台里的绑定不会同步到这里，要在这里再绑一次。
+              <figure class="screenshot-frame">
+                <img src="assets/screenshots/platform-06-binding.png" alt="新增绑定按钮，以及风险认证已认证状态和最新认证时间">
+                <figcaption>“新增绑定”；绑定并认证后，“风险认证”一栏会显示“已认证”和最新认证时间</figcaption>
+              </figure>
+            </li>
+            <li>先做短信登录：在“操作”一栏点“短信登录”，按提示输入短信验证码，完成登录认证。
+              <figure class="screenshot-frame">
+                <img src="assets/screenshots/platform-07-sms-and-risk-auth.png" alt="操作栏中的短信登录和风险认证入口，先做短信登录">
+                <figcaption>先点“短信登录”，完成登录认证后再做风险认证</figcaption>
+              </figure>
+            </li>
+            <li>再做风险认证（必须在短信登录之后）：点“风险认证”，按弹窗提示用电子税务局 App（弹窗写着“确保退出登录”）点右上角“扫一扫”扫码，或者选“国家网络身份认证APP扫脸认证”，按提示刷脸，最后点“扫码完成”。弹窗下方勾选“认证成功后，重开30天之内，该开票人开具的所有因未认证而开票失败的发票”，认证成功后，这 30 天内因为没认证而开票失败的发票会重新开出。
+              <figure class="screenshot-frame">
+                <img src="assets/screenshots/platform-08-risk-auth-dialog.png" alt="风险认证弹窗：扫码或扫脸认证，并勾选重开30天内因未认证而失败的发票">
+                <figcaption>风险认证弹窗：完成认证，并勾选重开 30 天内因未认证而开票失败的发票</figcaption>
+              </figure>
+            </li>
+            <li>回到“数电账户管理”，“风险认证”一栏显示“已认证”和最新认证时间，就完成了。</li>
           </ol>
           <p>这里设置的只是登录开票平台用的密码；美菜后台里那一步“旭峰登录认证”不用重做，也不会受影响。以后忘了密码，同样用“重置密码”自己找回；预留手机号收不到验证码的，在注册页提交工单。</p>
         </div>

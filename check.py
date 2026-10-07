@@ -33,6 +33,21 @@ MANUAL_PAGE_FORBIDDEN_TERMS = ("RPA", "乐企", "试用期")
 MANUAL_FORBIDDEN_ERROR_CODES = ("8047", "3001", "8011")
 # 手册必须给出人工兜底入口：注册页的工单。没有在线客服，只有工单系统。
 MANUAL_TICKET_MARKERS = ("提交工单",)
+# 2026-10-07 业主口径：平台用于认证失败补救，不是每个商户的首次必做步骤。
+MANUAL_PLATFORM_REQUIRED_PHRASES = (
+    "平时不需要登录这个平台。",
+    "用和美菜上相同的数电账号绑定",
+    "必须在短信登录之后",
+    "的开票服务已开通。请登录票通电子发票服务平台，账号是企业税号",
+    "收到这条短信不代表要马上登录",
+)
+GUIDE_PLATFORM_REQUIRED_PHRASE = "开通后会收到一条开通短信"
+# 保留工单入口；开票平台仅允许以下两个完整地址，不放行整个域名。
+MANUAL_ALLOWED_EXTERNAL_LINKS = (
+    "https://fapiao.chinavtax.com/register",
+    "https://fpkj.vpiaotong.com/login",
+    "https://fpkj.vpiaotong.com/resetpwd",
+)
 # 全站不得出现「在线客服」：人工处理后在注册页回复，不是即时对话，这么写会让商户等回复。
 SITE_FORBIDDEN_SUPPORT_TERMS = ("在线客服",)
 # 宣传站对外一律称「开票平台」，正文不出现上游厂商名。注册页的品牌名是另一回事
@@ -62,6 +77,9 @@ VENDOR_ORDINARY_PHRASES = (
 VENDOR_GUARD_CASES = (
     ("旭峰微票通开票平台", 0),
     ("票通电子发票服务平台", 0),
+    ("的开票服务已开通。请登录票通电子发票服务平台，账号是企业税号", 0),
+    ("的开票服务已开通。请登录票通平台，账号是企业税号", 1),
+    ("票通电子发票服务平台；请转发票通平台公告", 1),
     ("发票通常三分钟到账", 0),
     ("电子发票通用指南", 0),
     ("发票通行规则", 0),
@@ -178,6 +196,11 @@ def visible_text(source: str) -> str:
     parser.feed(source)
     parser.close()
     return "".join(parser.parts)
+
+
+def missing_manual_platform_phrases(source: str) -> tuple[str, ...]:
+    text = visible_text(source)
+    return tuple(phrase for phrase in MANUAL_PLATFORM_REQUIRED_PHRASES if phrase not in text)
 
 
 class AuthCycleParser(VisibleTextParser):
@@ -669,6 +692,27 @@ def check_copy(
     checks: Checks, sources: dict[str, str], parsers: dict[str, SiteHTMLParser]
 ) -> None:
     problems: list[str] = []
+    guide_sample = "开通后会收到一条开通短信，告诉你开票平台的登录账号；平时不用登录，开票失败时再按手册操作。"
+    guide_cases = (
+        (guide_sample, True),
+        (guide_sample.replace("开通短信", "<strong>开通短信</strong>"), True),
+        (guide_sample.replace("开通短信", "开通<!-- x > 0 -->短信"), True),
+        (guide_sample.replace("开通短信", "开通短&#20449;"), True),
+        (guide_sample.replace(GUIDE_PLATFORM_REQUIRED_PHRASE, ""), False),
+        (guide_sample.replace("开通短信", "开通短"), False),
+        (f"<!-- {guide_sample} --><script>{guide_sample}</script><style>{guide_sample}</style>", False),
+    )
+    for source, expected in guide_cases:
+        actual = GUIDE_PLATFORM_REQUIRED_PHRASE in visible_text(source)
+        if actual != expected:
+            problems.append(f"guide platform self-test failed on {source!r}: {actual}, expected {expected}")
+    if GUIDE_PLATFORM_REQUIRED_PHRASE not in visible_text(sources.get("guide.html", "")):
+        problems.append(f"guide.html lacks platform phrase {GUIDE_PLATFORM_REQUIRED_PHRASE!r}")
+    if not any(
+        link["attrs"].get("href") == "manual.html#platform"
+        for link in parsers.get("guide.html", SiteHTMLParser()).links
+    ):
+        problems.append("guide.html lacks the manual.html#platform link")
     for name in HTML_FILES:
         source = sources.get(name, "")
         for term in FORBIDDEN_TERMS:
@@ -718,7 +762,7 @@ def check_copy(
     checks.record(
         "Copy and FAQ",
         problems,
-        "forbidden-term scan clean; all 10 fixed FAQs and tax-policy disclaimer present",
+        f"{len(guide_cases)} guide platform self-tests passed; activation SMS phrase and manual link present; forbidden-term scan clean; all 10 fixed FAQs and tax-policy disclaimer present",
     )
 
 
@@ -751,8 +795,12 @@ def check_images(
 ) -> None:
     problems: list[str] = []
     used_placeholders: set[str] = set()
+    manual_parser = SiteHTMLParser()
+    if (ROOT / MANUAL_FILE).is_file():
+        manual_parser.feed((ROOT / MANUAL_FILE).read_text(encoding="utf-8"))
+        manual_parser.close()
 
-    for name, parser in parsers.items():
+    for name, parser in {**parsers, MANUAL_FILE: manual_parser}.items():
         for image in parser.images:
             src = image.get("src", "")
             alt = normalized(image.get("alt", ""))
@@ -773,6 +821,12 @@ def check_images(
                 used_placeholders.add(src)
             if not alt:
                 problems.append(f"{name} img lacks non-empty alt text: {src}")
+            if name == MANUAL_FILE and not any(
+                any(figure_image is image for figure_image in figure["images"])
+                and normalized(" ".join(figure["caption"]))
+                for figure in parser.figures
+            ):
+                problems.append(f"{name} img needs a figure with a non-empty figcaption: {src}")
 
         for figure in parser.figures:
             images = figure["images"]
@@ -797,7 +851,7 @@ def check_images(
     checks.record(
         "Screenshot placeholders",
         problems,
-        "step-01 to step-04 real screenshots use safe paths, alt text, and captions",
+        "step-01 to step-04 and manual screenshots use safe paths, alt text, and captions",
     )
 
 
@@ -1602,6 +1656,25 @@ def check_explainer(
 def check_manual(checks: Checks) -> None:
     problems: list[str] = []
     page_sources: dict[str, str] = {}
+    sample = (
+        "平时不需要登录这个平台。用和美菜上相同的数电账号绑定；必须在短信登录之后。"
+        "（你的企业名称）的开票服务已开通。请登录票通电子发票服务平台，账号是企业税号；"
+        "收到这条短信不代表要马上登录。"
+    )
+    platform_cases = (
+        (sample, ()),
+        (sample.replace("平时", "<strong>平时</strong>"), ()),
+        (sample.replace("短信登录", "短信<!-- x > 0 -->登录"), ()),
+        *((sample.replace(phrase, ""), (phrase,)) for phrase in MANUAL_PLATFORM_REQUIRED_PHRASES),
+        (f"<!-- {sample} --><script>{sample}</script><style>{sample}</style>", MANUAL_PLATFORM_REQUIRED_PHRASES),
+        (sample.replace("平台。", "平台."), ("平时不需要登录这个平台。",)),
+        (sample.replace("服务已开通。", "服务已开通."), ("的开票服务已开通。请登录票通电子发票服务平台，账号是企业税号",)),
+        (sample.replace("不代表", "代表"), ("收到这条短信不代表要马上登录",)),
+    )
+    for source, expected in platform_cases:
+        actual = missing_manual_platform_phrases(source)
+        if actual != expected:
+            problems.append(f"manual platform self-test failed on {source!r}: {actual!r}, expected {expected!r}")
 
     for name in NAV_PAGE_FILES:
         path = ROOT / name
@@ -1639,6 +1712,18 @@ def check_manual(checks: Checks) -> None:
         manual_parser.feed(manual_source)
         manual_parser.close()
         manual_text = manual_parser.text
+        if '<h3 id="platform">' not in manual_source:
+            problems.append(f'{MANUAL_FILE} lacks the platform subsection heading (h3 id="platform")')
+        for phrase in missing_manual_platform_phrases(manual_source):
+            problems.append(f"{MANUAL_FILE} lacks platform phrase {phrase!r}")
+        for link in manual_parser.links:
+            attrs = link["attrs"]
+            href = attrs.get("href", "")
+            if is_external_reference(href):
+                if href not in MANUAL_ALLOWED_EXTERNAL_LINKS:
+                    problems.append(f"{MANUAL_FILE} has unexpected external link {href}")
+                if attrs.get("target") != "_blank" or "noopener" not in attrs.get("rel", "").split():
+                    problems.append(f"{MANUAL_FILE} external link needs target=_blank and rel=noopener: {href}")
 
         for term in (*MANUAL_PAGE_FORBIDDEN_TERMS, *SITE_FORBIDDEN_VENDOR_TERMS):
             occurrence_count = (
@@ -1752,7 +1837,7 @@ def check_manual(checks: Checks) -> None:
     checks.record(
         "manual",
         problems,
-        "four-page header navigation is cross-linked; forbidden terms and upstream error codes occur 0 times; support-ticket entry, duration ranges, source attribution, PDF download link/file, and print styles are present",
+        f"{len(platform_cases)} platform self-tests passed; required platform phrases and exact external-link allowlist verified; four-page header navigation is cross-linked; forbidden terms and upstream error codes occur 0 times; support-ticket entry, duration ranges, source attribution, PDF download link/file, and print styles are present",
     )
 
 
